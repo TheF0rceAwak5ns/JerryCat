@@ -34,8 +34,8 @@ def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
     return False
 
 
-def banner():
-    banner = '''
+def banner() -> str:
+    return '''
     
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠲⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡴⠞⢛⣩⡽⠿⠛⠛⠷⣄⠀⠀
@@ -65,8 +65,6 @@ def banner():
                                                   JerryCat By Anh4ckin3 & Talace
 
 '''
-
-    return banner
 
 
 def main():
