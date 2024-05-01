@@ -15,6 +15,9 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
+global args
+global output
+
 # progress_bar object - serve as a model
 progress_bar = Progress(
     "{task.description}",
@@ -38,10 +41,36 @@ common_username: list[str] = [
 
 
 # TODO : Make a class for output statement [+], [-], like output.success("description of the output")
+class output_class:
+    def __init__(self):
+        self.description = ""
+
+    def message(self, state: str, description: str, clear_previous_line: bool) -> None:
+        self.description = description
+
+        if clear_previous_line:
+            sys.stdout.write("\033[F")  # back to previous line
+            sys.stdout.write("\033[K")  # clear line
+
+        match state:
+            case "success":
+                cprint("[+] ", "green", end="")
+            case "failed":
+                cprint("[!] ", "red", end="")
+            case "error":
+                cprint("[!] ", "yellow", end="")
+            case "ongoing":
+                cprint("[*] ", "blue", end="")
+
+        print(self.description)
+
+    def verbose(self, state: str, description: str, clear_previous_line: bool) -> None:
+        if args.verbose:
+            self.message(state, description, clear_previous_line)
+
 
 # Brute force mode function
 def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
-
     if userlist is None:
         userlist = common_username
     else:
@@ -112,6 +141,7 @@ def banner() -> str:
 
 
 def main():
+    global output, args
     parser = argparse.ArgumentParser(description="jerrycat the good guy !")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-v", "--verbose", action="store_true")
