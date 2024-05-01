@@ -98,6 +98,7 @@ def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
                     # TODO : add an option --continue-on-success
                     if response.status_code == 200:
                         progress.update(task, completed=length_wordlist * len(userlist))
+                        output.verbose(state="success", description="Brute force done !", clear_previous_line=True)
                         time.sleep(1)
                         return username, password
                     else:
@@ -142,11 +143,12 @@ def banner() -> str:
 
 def main():
     global output, args
+
     parser = argparse.ArgumentParser(description="jerrycat the good guy !")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-v", "--verbose", action="store_true")
+    group.add_argument("-v", "--verbose", action="store_true", default=False)
 
-    # chose mode
+    # choose mode
     parser.add_argument("mode", choices=["brute", "exec", "reverse"],
                         help="Mode: bruteforce, command, or reverse shell")
 
@@ -169,6 +171,9 @@ def main():
 
     args = parser.parse_args()
 
+    # instance new class
+    output = output_class()
+
     # settings for brute mode
     if args.mode == "brute":
         if not all([args.url, args.wordlist]):
@@ -183,12 +188,14 @@ def main():
             cprint("[*]", "blue", end="")
             print(' Brute force is running...')
             credentials_found = brute(url, userlist, passwords)
+
+            # sys.stdout.write("\033[F")  # back to previous line
+            # sys.stdout.write("\033[K")  # clear line
+
             if not credentials_found:
-                cprint("[-]", "red", end="")
-                print(" No user or password is match ! :(")
+                output.message("failed", f"No user or password is matching ! :(", False)
             else:
-                cprint("[+]", "green", end="")
-                print(f" find user and password : {credentials_found[0]}:{credentials_found[1]}")
+                output.message("success", f"Find user and password : {credentials_found[0]}:{credentials_found[1]}",False)
 
                 # settings for exec mode
     elif args.mode == "exec":
