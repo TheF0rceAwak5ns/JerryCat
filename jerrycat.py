@@ -1,9 +1,10 @@
 import argparse
+import sys
 import time
 
 import requests
 from requests.auth import HTTPBasicAuth
-from tqdm import tqdm
+
 from termcolor import *
 from rich.progress import (
     BarColumn,
@@ -43,6 +44,9 @@ def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
 
     if userlist is None:
         userlist = common_username
+    else:
+        with open(userlist, 'r') as file:
+            userlist = file.read().splitlines()
 
     # without user list
     with open(wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
