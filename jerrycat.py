@@ -56,7 +56,7 @@ class output_class:
             case "success":
                 cprint("[+] ", "green", end="")
             case "failed":
-                cprint("[!] ", "red", end="")
+                cprint("[-] ", "red", end="")
             case "error":
                 cprint("[!] ", "yellow", end="")
             case "ongoing":
@@ -97,11 +97,12 @@ def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
 
                     # TODO : add an option --continue-on-success
                     if response.status_code == 200:
+                        output.verbose(state="success", description=f"{username}:{password}", clear_previous_line=False)
                         progress.update(task, completed=length_wordlist * len(userlist))
-                        output.verbose(state="success", description="Brute force done !", clear_previous_line=True)
                         time.sleep(1)
                         return username, password
                     else:
+                        output.verbose(state="failed", description=f"{username}:{password}", clear_previous_line=False)
                         progress.advance(task)
 
     # if not found return False statement
