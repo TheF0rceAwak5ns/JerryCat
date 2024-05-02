@@ -195,14 +195,12 @@ def main():
             parser.error(" -u and -w arguments are requires for this mode.")
         else:
             print(banner())
+
             cprint("[+]", "green", end="")
             print(" Mode Brute selected")
-            url = args.url
-            userlist = args.userlist
-            passwords = args.wordlist
-            cprint("[*]", "blue", end="")
-            print(' Brute force is running...')
-            credentials_found = brute(url, userlist, passwords)
+
+            brute_instance = Brute(args.url, args.userlist, args.wordlist)
+            credentials_found = brute_instance.brute()
 
             # sys.stdout.write("\033[F")  # back to previous line
             # sys.stdout.write("\033[K")  # clear line
@@ -210,7 +208,13 @@ def main():
             if not credentials_found:
                 output.message("failed", f"No user or password is matching ! :(", False)
             else:
-                output.message("success", f"Find user and password : {credentials_found[0]}:{credentials_found[1]}",False)
+                for credential in credentials_found:
+
+                    username_found = credential.get('username')
+                    password_found = credential.get('password')
+
+                    output.message("success", f"Find user and password : {username_found}:{password_found}",
+                                   False)
 
                 # settings for exec mode
     elif args.mode == "exec":
