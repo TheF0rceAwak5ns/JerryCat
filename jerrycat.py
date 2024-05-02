@@ -4,11 +4,15 @@ import concurrent.futures
 import requests
 from requests.auth import HTTPBasicAuth
 
-from termcolor import *
+from rich.console import Console
+from rich.text import Text
+
+console = Console()
 
 # Global variable to access state of args and my single instance of my class output (yes, not the cleanest way)
 global args
 global output
+
 
 # banner of the project
 def banner() -> str:
@@ -68,7 +72,6 @@ common_username: list[str] = [
 ]
 
 
-# TODO : Make a class for output statement [+], [-], like output.success("description of the output")
 class output_class:
     def __init__(self):
         self.description = ""
@@ -80,17 +83,22 @@ class output_class:
             sys.stdout.write("\033[F")  # back to previous line
             sys.stdout.write("\033[K")  # clear line
 
-        match state:
-            case "success":
-                cprint("[+] ", "green", end="")
-            case "failed":
-                cprint("[-] ", "red", end="")
-            case "error":
-                cprint("[!] ", "yellow", end="")
-            case "ongoing":
-                cprint("[*] ", "blue", end="")
+        text = Text()
 
-        print(self.description)
+        match state:
+            case "credit":
+                text.append(f"[+] ", style="pale_turquoise1")
+            case "success":
+                text.append(f"[+] ", style="bright_green")
+            case "failed":
+                text.append(f"[-] ", style="red1")
+            case "error":
+                text.append(f"[!] ", style="orange_red1")
+            case "ongoing":
+                text.append(f"[*] ", style="dodger_blue2")
+
+        text.append(self.description)
+        console.print(text)
 
     def verbose(self, state: str, description: str, clear_previous_line: bool) -> None:
         if args.verbose:
