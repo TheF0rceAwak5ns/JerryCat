@@ -1,24 +1,18 @@
 import argparse
 import sys
-import time
 import concurrent.futures
 import requests
 from requests.auth import HTTPBasicAuth
 
 from termcolor import *
-from rich.progress import (
-    BarColumn,
-    MofNCompleteColumn,
-    Progress,
-    TextColumn,
-    TimeElapsedColumn,
-    TimeRemainingColumn,
-)
 
+# Global variable to access state of args and my single instance of my class output (yes, not the cleanest way)
 global args
 global output
 
 # progress_bar object - serve as a model
+'''
+Putting in comment as its not use anymore (maybe need it later)
 progress_bar = Progress(
     "{task.description}",
     TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
@@ -28,7 +22,7 @@ progress_bar = Progress(
     TimeElapsedColumn(),
     TextColumn("•"),
     TimeRemainingColumn(),
-)
+)'''
 
 # common username list of tomcat's most common username - serve as backup if no user list
 common_username: list[str] = [
@@ -189,46 +183,48 @@ def main():
     # instance new class
     output = output_class()
 
-    # settings for brute mode
-    if args.mode == "brute":
-        if not all([args.url, args.wordlist]):
-            parser.error(" -u and -w arguments are requires for this mode.")
-        else:
-            print(banner())
+    # banner draw of the tool
+    print(banner())
 
-            cprint("[+]", "green", end="")
-            print(" Mode Brute selected")
-
-            brute_instance = Brute(args.url, args.userlist, args.wordlist)
-            credentials_found = brute_instance.brute()
-
-            # sys.stdout.write("\033[F")  # back to previous line
-            # sys.stdout.write("\033[K")  # clear line
-
-            if not credentials_found:
-                output.message("failed", f"No user or password is matching ! :(", False)
+    # switch for mode
+    match args.mode:
+        # settings for brute mode
+        case 'brute':
+            if not all([args.url, args.wordlist]):
+                parser.error(" -u and -w arguments are requires for this mode.")
             else:
-                for credential in credentials_found:
 
-                    username_found = credential.get('username')
-                    password_found = credential.get('password')
+                cprint("[+]", "green", end="")
+                print(" Mode Brute selected")
 
-                    output.message("success", f"Find user and password : {username_found}:{password_found}",
-                                   False)
+                brute_instance = Brute(args.url, args.userlist, args.wordlist)
+                credentials_found = brute_instance.brute()
 
-                # settings for exec mode
-    elif args.mode == "exec":
-        if not all([args.url, args.user, args.password]):
-            parser.error("-u, -U, -p arguments are requires for this mode.")
-        else:
-            print("Command execution mode selected")
+                # sys.stdout.write("\033[F")  # back to previous line
+                # sys.stdout.write("\033[K")  # clear line
 
-    # settings for reverse mode
-    elif args.mode == "reverse":
-        if not all([args.url, args.user, args.password, args.reverse]):
-            parser.error("-u, -U, -p arguments are requires for this mode.")
-        else:
-            print("Reverse shell mode selected")
+                if not credentials_found:
+                    output.message("failed", f"No user or password is matching ! :(", False)
+                else:
+                    for credential in credentials_found:
+                        username_found = credential.get('username')
+                        password_found = credential.get('password')
+
+                        output.message("success", f"Find user and password : {username_found}:{password_found}",
+                                       False)
+        # settings for exec mode
+        case 'exec':
+            if not all([args.url, args.user, args.password]):
+                parser.error("-u, -U, -p arguments are requires for this mode.")
+            else:
+                print("Command execution mode selected")
+
+        # settings for reverse mode
+        case 'reverse':
+            if not all([args.url, args.user, args.password, args.reverse]):
+                parser.error("-u, -U, -p arguments are requires for this mode.")
+            else:
+                print("Reverse shell mode selected")
 
 
 if __name__ == "__main__":
