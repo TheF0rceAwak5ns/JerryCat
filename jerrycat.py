@@ -234,35 +234,32 @@ def main():
     signal.signal(signal.SIGINT, lambda sig, frame: sys.exit(output.message(state="exit", description="See you next time!", clear_before=True)))
 
     parser = argparse.ArgumentParser(description="jerrycat the good guy !")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-v", "--verbose", action="store_true", default=False)
-
-    group.add_argument("--payload")
 
     # choose mode
-    parser.add_argument("mode", choices=["brute", "exec", "reverse"],
-                        help="Mode: bruteforce, command, or reverse shell")
+    parser.add_argument('mode', metavar='MODE', type=str, choices=['brute', 'exec', 'reverse'],
+                        help="Mode: brute, exec, or reverse")
 
-    # TODO : See if we need to update this option below because -U is already an option? (like --host --ip)
-    parser.add_argument('-u', '--url', dest='url', help='url of the tomcat app')
+    # url
+    parser.add_argument('url', metavar='URL', type=str, help='URL of the tomcat app')
+
+    parser.add_argument('-u', '--user', dest='user', help='tomcat user')
+    parser.add_argument('-p', '--password', dest='password', help='tomcat user password')
+
+    parser.add_argument("-v", "--verbose", action="store_true", default=False, help='Output all logs')
+    parser.add_argument("--payload", help='Path of your payload [webshell, reverseshell]')
 
     # Brute mode
     brute_mode = parser.add_argument_group("Brute Options")
-    parser.add_argument('-w', '--wordlist', dest='wordlist', help='path on your own wordlist')
-    parser.add_argument('-l', '--user-list', dest='userlist', help='User list ( default tomcat )')
+    brute_mode.add_argument('-w', '--wordlist', dest='wordlist', help='path on your own wordlist')
+    brute_mode.add_argument('-U', '--user-list', dest='userlist', help='User list ( default tomcat )')
 
-    # exec mode
-    exec_mode = parser.add_argument_group("Command execution Options")
-    parser.add_argument('-U', '--user', dest='user', help='tomcat user')
-    parser.add_argument('-p', '--password', dest='password', help='tomcat user password')
+    # exec mode - no specific option yet
+    webshell_mode = parser.add_argument_group("Command execution Options")
 
-    # reverse shell mode
+    # reverse shell mode - no specific option yet
     reverse_mode = parser.add_argument_group("reverse shell Options")
-    reverse_mode.add_argument('-R', '--reverse', dest='reverse', help='path to your reverse shell payload')
 
     args = parser.parse_args()
-
-
 
     # instance new class
     output = output_class()
