@@ -303,7 +303,7 @@ def main():
 
     # Brute mode
     brute_mode = parser.add_argument_group("Brute Options")
-    brute_mode.add_argument('-w', '--wordlist', dest='wordlist', help='path on your own wordlist')
+    brute_mode.add_argument('-P', '--password-list', dest='wordlist', help='path on your own wordlist')
     brute_mode.add_argument('-U', '--user-list', dest='userlist', help='User list ( default tomcat )')
 
     # exec mode - no specific option yet
