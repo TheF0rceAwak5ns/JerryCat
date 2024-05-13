@@ -328,6 +328,21 @@ def main():
         # make something with it later
         pass
 
+    binary_msfvenom = "msfvenom"
+    msfvenom_path = shutil.which(binary_msfvenom)
+
+    binary_curl = "curl"
+    curl_path = shutil.which(binary_msfvenom)
+
+    if msfvenom_path is None:
+        output.message("error", f"{binary_msfvenom} is not installed", False)
+        return
+
+    if curl_path is None:
+        output.message("error", f"{binary_curl} is not installed", False)
+        return
+
+
     # switch for mode
     match args.mode:
         # settings for brute mode

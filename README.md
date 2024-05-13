@@ -31,11 +31,11 @@ git clone https://github.com/TheF0rceAwak5ns/JerryCat.git && cd JerryCat && pip 
 ### Brute Force
 **without** a user list
 ```sh
-python3 jerrycat.py brute http://10.10.10.95:8080/ -P /user/share/wordlists/rockyou.txt
+python3 jerrycat.py brute http://10.10.10.95:8080/ -P wordlists/password-list-common-tomcat.txt
 ```
 **with** a user list
 ```sh
-python3 jerrycat.py brute http://10.10.10.95:8080/ -U /path/to/user/list -P /user/share/wordlists/rockyou.txt
+python3 jerrycat.py brute http://10.10.10.95:8080/ -U /path/to/user/list -P wordlists/password-list-common-tomcat.txt
 ```
 
 ## Usage - Authenticated attack
