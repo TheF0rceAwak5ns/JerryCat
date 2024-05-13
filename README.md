@@ -15,9 +15,9 @@
 
 ## Features/Mode ⚒️
 
- - [x] Brute Force (brute)
- - [x] Webshell (exec)
- - [x] Reverse shell (reverse)
+ - [x] [Brute Force (brute)](#brute-force)
+ - [x] [Webshell (exec)](#webshell)
+ - [x] [Reverse shell (reverse)](#reverse-shell)
 
 ## Setup ✨
 
