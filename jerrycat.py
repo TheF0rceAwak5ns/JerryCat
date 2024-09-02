@@ -20,6 +20,8 @@ from rich.console import Console
 from rich import print
 from rich.text import Text
 
+import core.utils
+
 console = Console()
 
 # Global variable to access state of args and my single instance of my class output (yes, not the cleanest way)
@@ -144,14 +146,6 @@ class tomcat:
         else:
             output.verbose(state="failed", description=f"{username}:{password}", clear_before=False)
             return None
-
-    def version_detection(self):
-        response = requests.get(f"{self.url}")
-        version = re.search(r"(\d.\d.\d\d)", response.text)[1]
-
-        output.message(state="info", description=f"version: {version}", clear_before=False)
-
-        return version
 
 
 class unauthenticated_attack(tomcat):
@@ -342,6 +336,9 @@ def main():
     if curl_path is None:
         output.message("error", f"{binary_curl} is not installed", False)
         return
+
+    if args.user and args.password:
+        core.utils.version_detection(url=args.url, username=args.user, password=args.password)
 
 
     # switch for mode
