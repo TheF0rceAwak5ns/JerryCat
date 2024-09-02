@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "jerrycat"
+version = "1.0.0"
+description = ""
+authors = ["Talace toto@toto.com"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.32.3"
+packaging = "^24.1"
+bs4 = "^0.0.2"
+rich = "^13.8.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
