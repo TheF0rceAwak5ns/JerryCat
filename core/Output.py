@@ -64,7 +64,7 @@ class Output:
                 state_text = "[+] "
                 state_style = 'bold pale_turquoise1'
             case "settings":
-                state_text = "[SETTINGS] "
+                state_text = "[#] "
                 state_style = 'bold turquoise2'
             case "command":
                 state_text = "[+] COMMAND OUTPUT "

@@ -6,7 +6,6 @@ from requests.auth import HTTPBasicAuth
 
 def generate_payload(filename: str, lhost: str, lport: str) -> str:
     resources_path = os.path.abspath("resources")
-    print(resources_path)
 
     war_files = glob.glob(os.path.join(resources_path, "*.war"))
 
