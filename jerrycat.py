@@ -219,7 +219,7 @@ def main():
 
     # listen for CTRL+C
     signal.signal(signal.SIGINT, lambda sig, frame: sys.exit(
-        output.message(state="exit", description="See you next time!", clear_before=True)
+        output.message(state="exit", description="See you next time!", url="", clear_before=True)
     ))
 
     parser = argparse.ArgumentParser(description="Jerrycat the good guy !")
