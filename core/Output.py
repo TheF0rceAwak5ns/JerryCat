@@ -1,3 +1,5 @@
+import sys
+
 from rich.console import Console
 from rich.text import Text
 from datetime import datetime
@@ -35,6 +37,10 @@ class Output:
             return
 
         self.description = description
+
+        if 'clear_before' in kwargs:
+            sys.stdout.write("\033[F")  # back to previous line
+            sys.stdout.write("\033[K")  # clear line
 
         text = Text()
 
