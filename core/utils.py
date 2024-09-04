@@ -4,10 +4,6 @@ import subprocess
 import requests
 from requests.auth import HTTPBasicAuth
 
-from jerrycat import output_class
-
-output = output_class()
-
 def generate_payload(filename: str, lhost: str, lport: str) -> str:
     resources_path = os.path.abspath("resources")
     print(resources_path)
@@ -34,21 +30,30 @@ def version_detection(url, **kwargs):
         auth = HTTPBasicAuth(username, password)
 
         endpoint = '/manager/text/serverinfo'
-        response = requests.get(f"{url}{endpoint}", auth=auth)
+        try:
+            response = requests.get(f"{url}{endpoint}", auth=auth)
 
-        if response.status_code == 200:
-            info_dict = {}
+            if response.status_code == 200:
+                info_dict = {}
 
-            lines = response.text.splitlines()
+                lines = response.text.splitlines()
 
-            for line in lines[1:]:
+                for line in lines[1:]:
 
-                key, value = line.split(":", 1)
-                key = key.strip()
-                value = value.strip().strip('[]')
-                info_dict[key] = value
+                    key, value = line.split(":", 1)
+                    key = key.strip()
+                    value = value.strip().strip('[]')
+                    info_dict[key] = value
 
-            if 'Tomcat Version' in info_dict:
-                output.message("info", f"{info_dict['Tomcat Version']}", False)
+                if 'Tomcat Version' in info_dict:
+                    if 'output' in kwargs:
+                        kwargs['output'].message("ongoing", f"{info_dict['Tomcat Version']}", url=endpoint)
+
+            elif response.status_code == 403:
+                print("USER CANT ACCESS TO CMD NEED TO CHECK IF HE CAN VIA GUI CHECK ROLES ETC")
+
+        except requests.exceptions.ConnectionError as e:
+            if 'Failed to resolve' in e:
+                print('TOTO')
 
     # make an else statement for an unauthenticated version detection
