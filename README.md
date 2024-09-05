@@ -1,4 +1,8 @@
 <h1 align="center">JerryCat 🐭<h1>
+
+![2024-09-05_11h33_48](https://github.com/user-attachments/assets/2a2c2979-93f9-45d1-86ca-e0cb0e245f65)
+
+
 <p align="center">
   <img alt="Version" src="https://img.shields.io/badge/version-1.1-blue.svg?cacheSeconds=2592000" />
   <a href="https://github.com/Ruulian/wconsole_extractor/blob/main/LICENSE" target="_blank">
