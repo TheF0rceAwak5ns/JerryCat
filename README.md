@@ -1,6 +1,6 @@
 <h1 align="center">JerryCat 🐭<h1>
 
-![2024-09-05_11h33_48](https://github.com/user-attachments/assets/2a2c2979-93f9-45d1-86ca-e0cb0e245f65)
+![](https://github.com/user-attachments/assets/4250ae4e-f82a-4d4f-b34c-91c2f7921d23)
 
 
 <p align="center">
