@@ -97,6 +97,9 @@ class Output:
         if state == "success" and "admin" in kwargs:
             text.append(" (Admin account!)", style="bold yellow")
 
+        if state == "success" and "manager" in kwargs:
+            text.append(f" (Manager-{kwargs['manager']} account!)", style="bold yellow")
+
         console.print(text, style='')
 
     def webshell_response(self, response: str, url: str):
