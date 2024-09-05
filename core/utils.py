@@ -46,7 +46,7 @@ def version_detection(url, **kwargs):
 
                 if 'Tomcat Version' in info_dict:
                     if 'output' in kwargs:
-                        kwargs['output'].message("ongoing", f"{info_dict['Tomcat Version']}", url=endpoint)
+                        kwargs['output'].message("info", f"{info_dict['Tomcat Version']}", url=endpoint)
 
             elif response.status_code == 403:
                 print("USER CANT ACCESS TO CMD NEED TO CHECK IF HE CAN VIA GUI CHECK ROLES ETC")

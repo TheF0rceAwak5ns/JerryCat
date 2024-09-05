@@ -84,6 +84,9 @@ class Output:
             case "exit":
                 state_text = "[EXITING] "
                 state_style = 'bold red1'
+            case "info":
+                state_text = "[i] "
+                state_style = 'bold turquoise2'
             case _:
                 state_text = ""
                 state_style = "bold yellow"
