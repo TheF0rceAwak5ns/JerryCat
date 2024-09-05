@@ -60,5 +60,9 @@ def version_detection(url, **kwargs):
 def deploy(filename: str, path: str, url: str, username: str, password: str):
     resources_path = os.path.abspath("resources")
 
-    command = f"curl --upload-file {filename}.war -u '{username}:{password}' '{url}/manager/text/deploy?path=/{path}'"
+    endpoint = f'/manager/text/deploy?path=/{path}'
+
+    command = f"curl --upload-file {filename}.war -u '{username}:{password}' '{url}{endpoint}'"
     subprocess.run(command, shell=True, check=True, capture_output=True, cwd=resources_path)
+
+    return endpoint
